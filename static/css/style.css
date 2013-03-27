@@ -1,0 +1,19 @@
+.clearfix {
+  *zoom: 1;
+}
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both;
+}
+/****** RETINA *************
+****************************/
+body {
+  text-shadow: 0 -1px 0 #ffffff;
+}
+a {
+  text-decoration: none !important;
+}

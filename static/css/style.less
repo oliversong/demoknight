@@ -1,0 +1,35 @@
+@bodyBackground: #F6F5F2;
+@linkColor: #c6c3bf;
+@import "less/mixins.less";
+@pink: #be1a8d;
+@picback: #CCC;
+@sansFontFamily: 'Open Sans', sans-serif;
+@orange: #ff9a09;
+@white: #f6f5f2;
+@beigewhite: #f6f2e3;
+@beigewhite2: #eae5d5;
+@smallco: #c6c6c6;
+@baseFontSize: 13px;
+@baseLineHeight: 18px;
+@headingsFontWeight: normal;
+
+/****** RETINA *************
+****************************/
+
+.at2x(@path, @w: auto, @h: auto) {
+  background-image: url(@path);
+  @at2x_path: ~`"@{path}".split('.').slice(0, "@{path}".split('.').length - 1).join(".") + "@2x" + "." + "@{path}".split('.')["@{path}".split('.').length - 1]`;
+
+  @media all and (-webkit-min-device-pixel-ratio : 1.5) {
+    background-image: url(@at2x_path);
+    background-size: @w @h;
+  }  
+}
+
+body{
+    text-shadow:0 -1px 0 #FFF;
+}
+
+a{
+    text-decoration:none !important;
+}

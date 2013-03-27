@@ -1,0 +1,25 @@
+User
+	has many
+		Category
+		Todo
+
+Category
+	has many
+		Todo
+
+	has one
+		User
+
+Todo
+	has many
+		Category
+
+	has one
+		User	
+
+Many to many
+x	Category-Todo
+
+One to many
+x	User-Category
+x	User-Todo
