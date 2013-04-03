@@ -196,17 +196,27 @@ def parsetask():
         # right now doing a primitive version, TODO: use Hamming distance or classifiers / HMM to get true accuracy / robustness
         # keywords: before due, after due, after at, before hours
         split_up = unparsed.split()
-        due_index = unparsed.index('due')
-        at_index = unparsed.index('at')
-        hours_index = unparsed.index('hours')
+        due_index = split_up.index('due')
+        if unparsed.find('at') != -1:
+            at_index = split_up.index('at')
+        else:
+            at_index = None 
+        if unparsed.find('hours') != -1:
+            hours_index = split_up.index('hours')
+        else:
+            hours_index = None
+
         errors = []
 
-        # STRING
+        # TODO: refactor this crap
+
+        # name of task. return: STRING
         name = ' '.join(split_up[:due_index])
         if not name:
             errors.append('No task name found')
 
-        # STRING that must be parsed in to a unix timestamp not including day
+        # due day. return: UNIX TIMESTAMP
+        if at_index != 
         day_string = ' '.join(split_up[due_index:at_index])
         cal = pdt.Calendar()
         due_day = cal.parse(day_string)
@@ -215,7 +225,7 @@ def parsetask():
         elif due_day[1] == 1 or due_day[1] == 3:
             due_day = time.mktime(datetime(due_day[0].tm_year,due_day[0].tm_mon,due_day[0].tm_mday).timetuple())
 
-        # STRING that must be parsed in to a number of milliseconds
+        # due time. return: MILLISECONDS
         time_string = split_up[at_index+1]
         due_time = cal.parse(time_string)
         if due_time[1] == 2:
@@ -225,7 +235,7 @@ def parsetask():
             # no time string, this is okay
             due_time = None 
 
-        # STRING that must be parsed in to a number of milliseconds
+        # estimated time required. return: MILLISECONDS
         estimate = split_up[hours_index-1]
 
         # make/add new Task
