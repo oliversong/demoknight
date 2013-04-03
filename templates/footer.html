@@ -1,3 +1,15 @@
-<footer>
-	Footer bro
-</footer>
+<div class="container">
+	<footer class="row">
+		<div class="span12">
+		{% if g.user %}
+			<a class="btn" href="{{ url_for('home') }}">Home</a>
+			<a class="btn" href="{{ url_for('settings') }}">Settings</a>
+			<a class="btn" href="{{ url_for('logout') }}">Logout</a>
+		{% else %}
+			<a class="btn" href="{{ url_for('about') }}">About</a>
+			<a class="btn" href="{{ url_for('login') }}">Login</a>
+			<a class="btn" href="{{ url_for('signup') }}">Sign Up</a>
+		{% endif %}
+		</div>
+	</footer>
+</div>

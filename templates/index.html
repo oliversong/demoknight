@@ -1,11 +1,22 @@
 {% extends "layout.html" %}
 
 {% block body %}
-Welcome to Demoknight
-Intelligent, scoped, load balanced todos.
+<div class="container">
+	<div class="row">
+		<div class="span12">
+			<div class="hero-unit">
+				<h1>Welcome to Demoknight</h1>
+				<p>Intelligent, scoped, load balanced todos.</p>
+				<p>
+					<a class="btn btn-primary btn-large" href="{{ url_for('signup') }}">
+						Sign Up
+					</a>
+				</p>
+			</div>
+		</div>
+	</div>
 
-<a href="{{ url_for('about') }}">About</a>
-<a href="{{ url_for('login') }}">Login</a>
-<a href="{{ url_for('signup') }}">Sign Up</a>
+</div>
+
 
 {% endblock %}

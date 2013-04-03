@@ -17,3 +17,18 @@ body {
 a {
   text-decoration: none !important;
 }
+.day {
+  height: 100px;
+  margin-top: 5px;
+  margin-right: 20px;
+}
+.plan {
+  border-left: 1px solid #EEE;
+  margin-left: -1px;
+  padding-left: 20px;
+}
+.nextweek {
+  border-left: 1px solid #EEE;
+  margin-left: -1px;
+  padding-left: 20px;
+}

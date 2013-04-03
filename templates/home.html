@@ -2,6 +2,44 @@
 
 {% block body %}
 
-Hello
+<div class="container">
+	<div class="row">
+		<div class="span4" id="thisWeek" >
+		</div>
+		<div class="span4" id="thisWeekPlan">
+		</div>
+		<div class="span4" id="nextWeek">
+		</div>
+	</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+
+<script type="text/template" id="task-template">
+	<div class="task">
+	  <input class="toggle" type="checkbox" <%= done ? 'checked="checked"' : '' %> />
+	  <label><%- title %></label>
+	  <a class="destroy"></a>
+	</div>
+	<input class="edit" type="text" value="<%- title %>" />
+</script>
+
+<script type="text/template" id="plan-template">
+    <div class="plan">
+        <label><%- title %></label>
+    </div>
+</script>
+
+<script type="text/template" id="day-template">
+    <div class="day">
+        <%- task %>
+    </div>
+</script>
+
+<script type="text/template" id="planner-template">
+    <div class="planner">
+        <%- plan %>
+    </div>
+</script>
 
 {% endblock %}

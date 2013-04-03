@@ -28,12 +28,14 @@
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
         
         {% include "header.html" %}
-
+        <hr>
         {% block body %}{% endblock %}
-
+        <hr>        
         {% include "footer.html" %}
 
         <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/backbone.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/underscore-min.js') }}"></script>
 
         <script type="text/javascript">
 

@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block body %}
+{% if error %}<div class=error><strong>Error:</strong> {{ error }}</div>{% endif %}
+<div class="container">
+	<div class="row">
+		<div class="span12">
+			<form action="" method=post>
+				<fieldset>
+					<legend>Login</legend>
+					<label>Email</label>
+					<input name='email' type="email" placeholder="Email">
+					<label>Password</label>
+					<input name='password' type="password">
+					<button type="submit" class="btn">Submit</button>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}
