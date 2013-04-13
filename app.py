@@ -101,16 +101,14 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(300))
     completed = db.Column(db.Boolean, default=False)
-    dueday = db.Column(db.String(120))
-    duetime = db.Column(db.String(80))
+    due = db.Column(db.Integer)
     estimate = db.Column(db.String(120))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     plandate = db.Column(db.String(120))
 
-    def __init__(self, name, dueday, duetime, estimate):
+    def __init__(self, name, due, estimate):
         self.name = name
-        self.dueday = dueday
-        self.duetime = duetime
+        self.due = due
         self.estimate = estimate
 
 @app.route('/')
@@ -179,74 +177,126 @@ def home():
         flash('Please sign in')
         return redirect(url_for('login'))
     # get two weeks worth of tasks
-    tasks = g.user.tasks.all().filter
+    # get current unix timestamp TODO: This is wrong
+    right_now = int(time.time())
+    two_weeks = right_now + 1209600000
+    # get unix timestamp for 2 weeks from now
+    tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks))
+
+    # sort tasks in to day buckets
     categories = g.user.categories.all()
-    return render_template('home.html', categories=categories, tasks=tasks)
+
+    # we don't want to calculate on templates, and the date should be rendered instantly, so no JS
+    # just do it in python and pass it in
+    # What is today? Get the two week interval by stepping back until I find Monday
+    two_week_strings = []
+
+    monday = datetime.now()
+    while True:
+        if monday.weekday() == 0:
+            return
+        delta = timedelta(days=-1)
+        monday -= delta
+
+    # time to count forward
+    for x in range(13):
+        delta = timedelta(days=x)
+        current_dt = monday+delta
+        two_week_strings.append(weekdays[current_dt.weekday()] + ' ' + current_dt.month + '/' + current_dt.day)
+
+    print two_week_strings    
+    return render_template('home.html', categories=categories, tasks=tasks, two_weeks=two_week_strings)
 
 @app.route('/addtask', methods=['POST'])
 def parsetask():
     if not g.user:
         abort(404)
     else:
-        unparsed = request.form['new_task']
-        # parse the input to get name, dueday, duetime, estimate
-        # 6.033 pset due next friday at 10pm should take about 3 hours
-        # 6.033 pset due friday 10pm 3hr
+        # FUCK IT
+        # # parse natural language
+        # unparsed = request.form['new_task']
+        # # parse the input to get name, dueday, duetime, estimate
+        # # 6.033 pset due next friday at 10pm should take about 3 hours
+        # # 6.033 pset due friday 10pm 3hr
 
-        # right now doing a primitive version, TODO: use Hamming distance or classifiers / HMM to get true accuracy / robustness
-        # keywords: before due, after due, after at, before hours
-        split_up = unparsed.split()
-        due_index = split_up.index('due')
-        if unparsed.find('at') != -1:
-            at_index = split_up.index('at')
-        else:
-            at_index = None 
-        if unparsed.find('hours') != -1:
-            hours_index = split_up.index('hours')
-        else:
-            hours_index = None
+        # # right now doing a primitive version, TODO: use Hamming distance or classifiers / HMM to get true accuracy / robustness
+        # # keywords: before due, after due, after at, before hours
+        # split_up = unparsed.split()
+        # due_index = split_up.index('due')
+        # if unparsed.find('at') != -1:
+        #     at_index = split_up.index('at')
+        # else:
+        #     at_index = None 
+        # if unparsed.find('hours') != -1:
+        #     hours_index = split_up.index('hours')
+        # else:
+        #     hours_index = None
 
-        errors = []
+        # errors = []
 
-        # TODO: refactor this crap
+        # # TODO: refactor this crap
 
-        # name of task. return: STRING
-        name = ' '.join(split_up[:due_index])
-        if not name:
-            errors.append('No task name found')
+        # # name of task. return: STRING
+        # name = ' '.join(split_up[:due_index])
+        # if not name:
+        #     errors.append('No task name found')
 
-        # due day. return: UNIX TIMESTAMP
-        if at_index != 
-        day_string = ' '.join(split_up[due_index:at_index])
+        # # due day. return: UNIX TIMESTAMP
+        # if at_index != 
+        # day_string = ' '.join(split_up[due_index:at_index])
+        # cal = pdt.Calendar()
+        # due_day = cal.parse(day_string)
+        # if due_day[1] == 0 or due_day[1] == 2:
+        #     errors.append('No due day found')
+        # elif due_day[1] == 1 or due_day[1] == 3:
+        #     due_day = time.mktime(datetime(due_day[0].tm_year,due_day[0].tm_mon,due_day[0].tm_mday).timetuple())
+
+        # # due time. return: MILLISECONDS
+        # time_string = split_up[at_index+1]
+        # due_time = cal.parse(time_string)
+        # if due_time[1] == 2:
+        #     #good
+        #     due_time = time.mktime(datetime(due_time[0].tm_hour))
+        # else:
+        #     # no time string, this is okay
+        #     due_time = None
+
+        # # estimated time required. return: MILLISECONDS
+        # estimate = split_up[hours_index-1]
+
+        # Assume that inputs come in already parsed
+        name = request.form['name']
+        day_string = request.form['due_day']  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+        time_string = request.form['due_time']  # HH:MM
+        estimate = request.form['estimate']
+
+        dt = None
+
         cal = pdt.Calendar()
-        due_day = cal.parse(day_string)
-        if due_day[1] == 0 or due_day[1] == 2:
-            errors.append('No due day found')
-        elif due_day[1] == 1 or due_day[1] == 3:
-            due_day = time.mktime(datetime(due_day[0].tm_year,due_day[0].tm_mon,due_day[0].tm_mday).timetuple())
+        due, what = cal.parse(day_string+' '+time_string)
+        if what in (1, 2):
+            # result is struct_time
+            dt = datetime.datetime(*due[:6])
+        elif what == 3:
+            # result is datetime
+            dt = due
 
-        # due time. return: MILLISECONDS
-        time_string = split_up[at_index+1]
-        due_time = cal.parse(time_string)
-        if due_time[1] == 2:
-            #good
-            due_time = time.mktime(datetime(due_time[0].tm_hour))
-        else:
-            # no time string, this is okay
-            due_time = None 
+        if dt is None:
+            return "Could not understand"
 
-        # estimated time required. return: MILLISECONDS
-        estimate = split_up[hours_index-1]
+        unixstmp = int(dt.strftime("%s"))
 
         # make/add new Task
-        task = Task(name, due_day, due_time, estimate)
+        task = Task(name, unixstmp, estimate)
         g.user.tasks.append(task)
         db.session.commit()
         return "Done"
 
+
 @app.route('/about')
 def about():
     return render_template('about.html')
+
 
 @app.route('/robots.txt')
 def robots():
@@ -254,11 +304,13 @@ def robots():
     res.mimetype = 'text/plain'
     return res
 
+
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
     """Send your static text file."""
     file_dot_text = file_name + '.txt'
     return app.send_static_file(file_dot_text)
+
 
 @app.before_request
 def before_request():
@@ -270,6 +322,7 @@ def before_request():
                 params(user_id=session['userid']).first()
         except:
             session.pop('userid', None)
+
 
 @app.after_request
 def add_header(response):

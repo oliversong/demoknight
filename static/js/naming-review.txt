@@ -1,0 +1,44 @@
+- Relate names to values (possibly with a context)
+    - Context: extra data to help find a name's binding
+- Naming examples
+    - Filesystem: file name -> inode (context: working directory)
+    - Memory management: virtual address -> physical address (context: address
+      space)
+    - Data storage: block number -> block; physical address -> memory cell;
+      etc.
+    - DNS: hostname -> IP address (context: search path)
+- DNS
+    - Absolute name: ends with a dot
+    - Divide into components at the dot
+    - Two kinds of resolvers
+        - Stub resolver: forwards all queries to a single DNS server, which
+          gives a result back
+        - Recursive resolver: does the full lookup process
+            - Each one knows ten root nameservers
+            - Connect to that nameserver; if it doesn't know it'll return a
+              referal (the nameserver of the next lower-level domain)
+            - Connect to that nameserver & repeat
+            - At the end, the nameserver for a domain will return a response
+              with an IP address (or a CNAME record, etc.)
+            - Generally does caching, so can short-circuit the first several
+              lookups
+    - CNAME record: indirect name
+    - Without a final dot, will use a search path --- so looking up
+      "google.com" would first look up "google.com.mit.edu.", and then try
+      "google.com."
+    - Applications
+        - Finding a service
+        - Load balancing
+            - Have five servers of some content
+            - When you get a lookup, the DNS server randomly picks one (or
+              randomly picks the least loaded) to return first
+        - CDN (Akamai)
+            - Does load balancing
+            - Rather than randomly picking one server, will consider where the
+              DNS resolver is and pick one nearby
+            - Issue: resolver will be a recursive resolver (in the ISP's data
+              center, or with Google), so may have different location than the
+              client machine that's trying to establish an HTTP connection
+- Sample questions
+    - 2012, Section III
+    - 2007, Section III
