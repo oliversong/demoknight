@@ -176,20 +176,11 @@ def home():
     if not g.user:
         flash('Please sign in')
         return redirect(url_for('login'))
-    # get two weeks worth of tasks
-    # get current unix timestamp TODO: This is wrong
-    right_now = int(time.time())
-    two_weeks = right_now + 1209600000
-    # get unix timestamp for 2 weeks from now
-    tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks))
-
-    # sort tasks in to day buckets
-    categories = g.user.categories.all()
 
     # we don't want to calculate on templates, and the date should be rendered instantly, so no JS
     # just do it in python and pass it in
     # What is today? Get the two week interval by stepping back until I find Monday
-    two_week_strings = []
+    two_week_strings = []l
 
     monday = datetime.now()
     while True:
@@ -198,14 +189,44 @@ def home():
         delta = timedelta(days=-1)
         monday -= delta
 
+    # floor that Monday
+    monday = monday - datetime.timedelta(hours=monday.hour,minutes=monday.minute,seconds=monday.second,microseconds=monday.microsecond)
+
     # time to count forward
     for x in range(13):
         delta = timedelta(days=x)
         current_dt = monday+delta
         two_week_strings.append(weekdays[current_dt.weekday()] + ' ' + current_dt.month + '/' + current_dt.day)
 
+    # get two weeks worth of tasks
+    # get current unix timestamp TODO: This is wrong
+    right_now = time.mktime(monday.timetuple())
+    two_weeks = right_now + 1209600000
+    # get unix timestamp for 2 weeks from now
+    tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks))
+
+    week = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
+    tasks_yo = {"First": deepcopy(week),"Second": deepcopy(week)}
+    # zip it up
+    aw_yeah = dict(zip(range(14),week.keys()))
+
+    # sort tasks in to day buckets
+    i = 0
+    while i < 13:
+        left = i * 86400000
+        right = left + 86400000
+        for task in tasks:
+            if left <= task.due < right:
+                if i <= 6:
+                    tasks_yo["First"][aw_yeah[i]].append(task)
+                else:
+                    tasks_yo["Second"][aw_yeah[i]].append(task)
+        i += 1
+
+    categories = g.user.categories.all()
+
     print two_week_strings    
-    return render_template('home.html', categories=categories, tasks=tasks, two_weeks=two_week_strings)
+    return render_template('home.html', categories=categories, tasks=tasks_yo, two_weeks=two_week_strings)
 
 @app.route('/addtask', methods=['POST'])
 def parsetask():

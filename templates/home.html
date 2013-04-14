@@ -5,7 +5,7 @@
 <div class="container">
 	<div class="row">
 		<div class="span4" id="thisWeek" >
-            {% for day in two_weeks[:7] %}
+            {% for day in two_week_strings[:7] %}
                 <div class="day">
                     {% for task in tasks[day] %}
                         <div class="task">
@@ -19,7 +19,7 @@
             {% endfor %}
 		</div>
 		<div class="span4" id="thisWeekPlan">
-            {% for day in two_weeks[:7] %}
+            {% for day in two_week_strings[:7] %}
                 <div class="day">
                     {% for plan in plans[day] %}
                         <div class="plan">
