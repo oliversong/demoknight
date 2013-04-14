@@ -5,8 +5,9 @@
 <div class="container">
 	<div class="row">
 		<div class="span4" id="thisWeek" >
-            {% for day in two_week_strings[:7] %}
+            {% for day in two_weeks[:7] %}
                 <div class="day">
+                    {{ day }}
                     {% for task in tasks[day] %}
                         <div class="task">
                             <input class="toggle" type="checkbox" {{ 'checked="checked"' if task.done }} />
@@ -19,9 +20,10 @@
             {% endfor %}
 		</div>
 		<div class="span4" id="thisWeekPlan">
-            {% for day in two_week_strings[:7] %}
+            {% for day in two_weeks[:7] %}
                 <div class="day">
-                    {% for plan in plans[day] %}
+                    {{ day }}
+                    {% for plan in planned[day] %}
                         <div class="plan">
                             <input class="toggle" type="checkbox" {{ 'checked="checked"' if plan.done }} />
                             <label> {{ plan.title }} </label>
@@ -35,6 +37,7 @@
 		<div class="span4" id="nextWeek">
             {% for day in two_weeks[7:] %}
                 <div class="day">
+                    {{ day }}
                     {% for task in tasks[day] %}
                         <div class="task">
                             <input class="toggle" type="checkbox" {{ 'checked="checked"' if task.done }} />

@@ -16,6 +16,7 @@ from flask.sessions import SessionInterface, SessionMixin
 from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.datastructures import CallbackDict
 import parsedatetime.parsedatetime as pdt
+from copy import deepcopy
 
 # make app
 app = Flask(__name__)
@@ -185,18 +186,22 @@ def home():
     monday = datetime.now()
     while True:
         if monday.weekday() == 0:
-            return
+            break
         delta = timedelta(days=-1)
         monday -= delta
 
     # floor that Monday
-    monday = monday - datetime.timedelta(hours=monday.hour,minutes=monday.minute,seconds=monday.second,microseconds=monday.microsecond)
+    monday = monday - timedelta(hours=monday.hour,minutes=monday.minute,seconds=monday.second,microseconds=monday.microsecond)
+
+    week = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
+    # zip it up
+    aw_yeah = dict(zip(range(7),week.keys()))
 
     # time to count forward
-    for x in range(13):
+    for x in range(14):
         delta = timedelta(days=x)
         current_dt = monday+delta
-        two_week_strings.append(weekdays[current_dt.weekday()] + ' ' + current_dt.month + '/' + current_dt.day)
+        two_week_strings.append(aw_yeah[current_dt.weekday()] + ' ' + str(current_dt.month) + '/' + str(current_dt.day))
 
     # get two weeks worth of tasks
     # get current unix timestamp TODO: This is wrong
@@ -206,11 +211,9 @@ def home():
     # get unix timestamp for 2 weeks from now
     tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks))
 
-    week = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
     tasks_yo = {"First": deepcopy(week),"Second": deepcopy(week)}
     plans_yo = deepcopy(week)
-    # zip it up
-    aw_yeah = dict(zip(range(7),week.keys()))
+    
 
     # sort tasks in to day buckets
     i = 0
@@ -238,6 +241,7 @@ def home():
     categories = g.user.categories.all()
 
     print two_week_strings
+
     return render_template('home.html', categories=categories, tasks=tasks_yo, two_weeks=two_week_strings, planned=plans_yo)
 
 @app.route('/addtask', methods=['POST'])
