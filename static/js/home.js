@@ -37,7 +37,9 @@
       el: '#home',
       initialize: function() {
         this.model = new HomeModel;
-        this.input = new InputView;
+        this.input = new InputView({
+          model: this.model
+        });
         this.thisWeek = new WeekView({
           type: 'this',
           model: this.model
@@ -46,17 +48,21 @@
           type: 'next',
           model: this.model
         });
-        return this.planner = new PlannerView;
+        return this.planner = new PlannerView({
+          model: this.model
+        });
       }
     });
     WeekView = Backbone.View.extend({
-      initialize: function(spec) {
+      initialize: function() {
         if (this.type === 'this') {
-
+          this.template = _.template($('#this_week_template').html());
+          return this.render();
         } else if (this.type === 'next') {
-
+          this.template = _.template($('#this_week_template').html());
+          return this.render();
         } else {
-
+          return console.log('You done goofed, son.');
         }
       }
     });

@@ -39,20 +39,32 @@ $ ->
     el: '#home',
     initialize: ()->
       this.model = new HomeModel
-      this.input = new InputView
+      this.input = new InputView({ model: this.model })
       this.thisWeek = new WeekView({ type: 'this', model: this.model})
       this.nextWeek = new WeekView({ type: 'next', model: this.model})
-      this.planner = new PlannerView
+      this.planner = new PlannerView({ model:this.model })
     })
 
   WeekView = Backbone.View.extend(
-    initialize: (spec)->
+    initialize: ()->
       if this.type is 'this'
         # render this week
+        this.el = '#this_week'
+        this.days = []
+        i = 0;
+        while i < 7
+          day = new DayView({ model:this.model })
+          this.days.push(day)
       else if this.type is 'next'
         # render next week
+        this.el = '#next_week'
+        this.render();
       else
         # what?
+        console.log('You done goofed, son.')
+
+    render: ()->
+      this.
 
   )
   PlannerView = Backbone.View.extend(
@@ -64,7 +76,8 @@ $ ->
   DayView = Backbone.View.extend(
     el: $(".day")
     initialize: ->
-
+      this.tasks = []
+      # for all tasks in this day, make a TaskView
     render: ->
   )
   TaskView = Backbone.View.extend(
