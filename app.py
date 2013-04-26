@@ -7,7 +7,7 @@
 """
 from __future__ import with_statement
 import time, os, sys, json
-from flask import Flask, render_template, request, redirect, url_for, abort, g, flash, escape, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, abort, g, flash, escape, session, make_response, jsonify
 from werkzeug import check_password_hash, generate_password_hash
 from datetime import datetime, tzinfo, timedelta
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -177,13 +177,26 @@ def home():
     if not g.user:
         flash('Please sign in')
         return redirect(url_for('login'))
+    return render_template('home.html')
 
+@app.route('/home_data',methods=['GET'])
+def home_data():
+    if not g.user:
+        flash('Please sign in')
+        return redirect(url_for('login'))
     # we don't want to calculate on templates, and the date should be rendered instantly, so no JS
     # just do it in python and pass it in
     # What is today? Get the two week interval by stepping back until I find Monday
     two_week_strings = []
 
     monday = datetime.now()
+    makeit = ""
+    makeday = ""
+    if len(str(monday.month)) == 1:
+        makeit = "0"
+    elif len(str(monday.day)) == 1:
+        makeday = "0"
+    today = makeit+str(monday.month)+'-'+makeday+str(monday.day)+'-'+str(monday.year)
     while True:
         if monday.weekday() == 0:
             break
@@ -240,9 +253,9 @@ def home():
 
     categories = g.user.categories.all()
 
-    print two_week_strings
-
-    return render_template('home.html', categories=categories, tasks=tasks_yo, two_weeks=two_week_strings, planned=plans_yo)
+    # make data into JSON object
+    home_data = {"categories":categories,"tasks":tasks_yo,"two_weeks":two_week_strings,"planned":plans_yo,"today":today}
+    return jsonify(**home_data)
 
 @app.route('/addtask', methods=['POST'])
 def parsetask():

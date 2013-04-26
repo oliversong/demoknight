@@ -1,84 +1,76 @@
 {% extends "layout.html" %}
 
 {% block body %}
+<link rel=stylesheet type=text/css href="/static/css/datepicker.css">
 
-<div class="container">
+<div class="container" id="home">
+    <div class="row">
+
+    </div>
 	<div class="row">
-		<div class="span4" id="thisWeek" >
-            {% for day in two_weeks[:7] %}
-                <div class="day">
-                    {{ day }}
-                    {% for task in tasks[day] %}
-                        <div class="task">
-                            <input class="toggle" type="checkbox" {{ 'checked="checked"' if task.done }} />
-                            <label> {{ task.title }} </label>
-                            <a class="destroy"></a>
-                        </div>
-                        <input class="edit" type="text" value="{{ task.title }}" />
-                    {% endfor %}
-                </div>
-            {% endfor %}
-		</div>
-		<div class="span4" id="thisWeekPlan">
-            {% for day in two_weeks[:7] %}
-                <div class="day">
-                    {{ day }}
-                    {% for plan in planned[day] %}
-                        <div class="plan">
-                            <input class="toggle" type="checkbox" {{ 'checked="checked"' if plan.done }} />
-                            <label> {{ plan.title }} </label>
-                            <a class="destroy"></a>
-                        </div>
-                        <input class="edit" type="text" value="{{ plan.title }}" />
-                    {% endfor %}
-                </div>
-            {% endfor %}
-		</div>
-		<div class="span4" id="nextWeek">
-            {% for day in two_weeks[7:] %}
-                <div class="day">
-                    {{ day }}
-                    {% for task in tasks[day] %}
-                        <div class="task">
-                            <input class="toggle" type="checkbox" {{ 'checked="checked"' if task.done }} />
-                            <label> {{ task.title }} </label>
-                            <a class="destroy"></a>
-                        </div>
-                        <input class="edit" type="text" value="{{ task.title }}" />
-                    {% endfor %}
-                </div>
-            {% endfor %}
-		</div>
+
 	</div>
 </div>
 
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 
-<script type="text/template" id="task-template">
-	<div class="task">
-	  <input class="toggle" type="checkbox" <%= done ? 'checked="checked"' : '' %> />
-	  <label><%- title %></label>
-	  <a class="destroy"></a>
-	</div>
-	<input class="edit" type="text" value="<%- title %>" />
-</script>
-
-<script type="text/template" id="plan-template">
-    <div class="plan">
-        <label><%- title %></label>
+<script type="text/template" id="inputter_template">
+    <div class="task_input span12">
+        <input type="text" class="task_name" placeholder="New task">
+        <div class="input-append date" data-date="<%= json_data.today %>" data-date-format="mm-dd-yyyy">
+          <input class="span2 task_date" size="16" type="text" value="<%= json_data.today %>">
+          <span class="add-on"><i class="icon-calendar"></i></span>
+        </div>
+        <select class="task_length">
+            <option>30 min</option>
+            <option>1 hour</option>
+            <option>2 hours</option>
+            <option>3 hours</option>
+            <option>4 hours</option>
+            <option>5 hours</option>
+            <option>6 hours</option>
+        </select>
+        <button type="submit" class="btn add_task">Submit</button>
     </div>
 </script>
 
-<script type="text/template" id="day-template">
+<script type="text/template" id="this_week_template">
+    <div class="span4 week" id="this_week">
+    </div>
+</script>
+
+<script type="text/template" id="planner_template">
+    <div class="span4 week" id="planner">
+    </div>
+</script>
+
+<script type="text/template" id="next_week_template">
+    <div class="span4 week" id="next_week">
+    </div>
+</script>
+
+<script type="text/template" id="day_template">
     <div class="day">
-        <%- task %>
+        <%= day %>
     </div>
 </script>
 
-<script type="text/template" id="planner-template">
-    <div class="planner">
-        <%- plan %>
+<script type="text/template" id="task_template">
+    <div class="task">
+        <input class="toggle" type="checkbox" <% if(task.done=="true"){ %><%='checked="checked"' %><% } %> />
+        <label> <%= task.name %> </label>
+        <a class="destroy"></a>
     </div>
+    <input class="edit" type="text" value="<%= task.name %>" />
+</script>
+
+<script type="text/template" id="plan_template">
+    <div class="plan">
+        <input class="toggle" type="checkbox" <%= if(plan.done=="true"){ %><%='checked="checked"'} %><% } %> />
+        <label> <%= plan.name %> </label>
+    </div>
+
 </script>
 
 {% endblock %}
