@@ -4,7 +4,7 @@
 <link rel=stylesheet type=text/css href="/static/css/datepicker.css">
 
 <div class="container" id="home">
-    <div class="row">
+    <div class="row" id="input_container">
 
     </div>
 	<div class="row">
@@ -23,8 +23,8 @@
 <script type="text/template" id="inputter_template">
     <div class="task_input span12">
         <input type="text" class="task_name" placeholder="New task">
-        <div class="input-append date" data-date="<%= json_data.today %>" data-date-format="mm-dd-yyyy">
-          <input class="span2 task_date" size="16" type="text" value="<%= json_data.today %>">
+        <div class="input-append date" id="dawg" data-date="<%= today %>" data-date-format="mm-dd-yyyy">
+          <input class="span2" size="16" type="text" value="<%= today %>">
           <span class="add-on"><i class="icon-calendar"></i></span>
         </div>
         <select class="task_length">

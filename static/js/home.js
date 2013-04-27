@@ -2,19 +2,7 @@
 (function() {
 
   $(function() {
-    var App, DayModel, DayView, HomeModel, HomeView, InputView, PlanModel, PlanView, PlannerModel, PlannerView, TaskModel, TaskView, WeekView, checkin, json_data, now, nowTemp;
-    nowTemp = new Date();
-    now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
-    checkin = $("#taskDate").datepicker({
-      onRender: function(date) {
-        if (date.valueOf() < now.valueOf()) {
-          return "disabled";
-        } else {
-          return "";
-        }
-      }
-    });
-    console.log("datepicker init");
+    var App, DayView, HomeModel, HomeView, InputView, PlanView, PlannerView, TaskView, WeekView, json_data, weekdays;
     json_data = {};
     $.ajax({
       url: '/home_data',
@@ -23,29 +11,25 @@
         return json_data = data;
       }
     });
-    console.log("Get data");
+    weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     HomeModel = Backbone.Model.extend({
       initialize: function() {
         return console.log("dashboard model initialized");
       }
     });
-    TaskModel = Backbone.Model.extend({});
-    PlanModel = Backbone.Model.extend({});
-    DayModel = Backbone.Model.extend({});
-    PlannerModel = Backbone.Model.extend({});
     HomeView = Backbone.View.extend({
       el: '#home',
       initialize: function() {
-        this.model = new HomeModel;
+        this.model = new HomeModel();
         this.input = new InputView({
           model: this.model
         });
         this.thisWeek = new WeekView({
-          type: 'this',
+          which: 'this',
           model: this.model
         });
         this.nextWeek = new WeekView({
-          type: 'next',
+          which: 'next',
           model: this.model
         });
         return this.planner = new PlannerView({
@@ -55,59 +39,108 @@
     });
     WeekView = Backbone.View.extend({
       initialize: function() {
-        if (this.type === 'this') {
-          this.template = _.template($('#this_week_template').html());
-          return this.render();
-        } else if (this.type === 'next') {
-          this.template = _.template($('#this_week_template').html());
-          return this.render();
+        var day, i, _results, _results1;
+        if (this.options.which === 'this') {
+          this.el = '#this_week';
+          this.days = [];
+          i = 0;
+          _results = [];
+          while (i < 7) {
+            day = new DayView({
+              which: i,
+              model: this.model
+            });
+            this.days.push(day);
+            _results.push(i += 1);
+          }
+          return _results;
+        } else if (this.options.which === 'next') {
+          this.el = '#next_week';
+          this.days = [];
+          i = 7;
+          _results1 = [];
+          while (i < 14) {
+            day = new DayView({
+              which: i,
+              model: this.model
+            });
+            this.days.push(day);
+            _results1.push(i += 1);
+          }
+          return _results1;
         } else {
           return console.log('You done goofed, son.');
         }
-      }
+      },
+      render: function() {}
     });
     PlannerView = Backbone.View.extend({
-      el: $(".planner"),
       initialize: function() {},
       render: function() {}
     });
     DayView = Backbone.View.extend({
-      el: $(".day"),
-      initialize: function() {},
+      template: _.template($('#day_template').html()),
+      initialize: function() {
+        var f_or_s, i, task, task_detail, weekday, _i, _len, _ref, _results;
+        i = this.options.which;
+        this.template({
+          day: json_data.two_weeks[i]
+        });
+        this.tasks = [];
+        weekday = weekdays[i % 7];
+        if (i < 7) {
+          f_or_s = "First";
+        } else {
+          f_or_s = "Second";
+        }
+        _ref = json_data.tasks[f_or_s][weekday];
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          task_detail = _ref[_i];
+          task = new TaskView({
+            model: this.model,
+            detail: task_detail
+          });
+          _results.push(this.tasks.push(task));
+        }
+        return _results;
+      },
       render: function() {}
     });
     TaskView = Backbone.View.extend({
-      el: $(".task"),
-      model: TaskModel,
       template: _.template($("#task_template").html()),
-      events: {
-        "click .toggle": "toggleDone"
-      },
-      initialize: function() {
-        this.listenTo(this.model, "change", this.render);
-        return this.listenTo(this.model, "destroy", this.remove);
-      }
+      initialize: function() {}
     });
     PlanView = Backbone.View.extend({
-      el: $(".plan"),
-      events: {
-        "click .toggle": "toggleDone"
-      },
       initialize: function() {},
       toggleDone: function() {},
       move: function() {}
     });
-    return InputView = Backbone.View.extend({
-      el: $(".task_input"),
-      events: {
-        "keypress .add_task": "create"
-      },
+    InputView = Backbone.View.extend({
+      el: $('#input_container'),
+      template: _.template($('#inputter_template').html()),
       initialize: function() {
-        this.home = this.task_name = this.$(".task_name");
-        this.task_date = this.$(".task_date");
-        return this.task_length = this.$(".task_length");
+        var now, nowTemp;
+        this.render();
+        nowTemp = new Date();
+        now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+        return $('#dawg').datepicker({
+          onRender: function(date) {
+            if (date.valueOf() < now.valueOf()) {
+              return "disabled";
+            } else {
+              return "";
+            }
+          }
+        });
       },
-      create: function() {
+      render: function() {
+        $(this.el).html(this.template({
+          today: json_data.today
+        }));
+        return this;
+      },
+      new_task: function() {
         var data;
         data = {
           name: this.task_name,
@@ -118,7 +151,8 @@
           return "Done";
         });
       }
-    }, App = new HomeView());
+    });
+    return App = new HomeView();
   });
 
 }).call(this);

@@ -1,11 +1,4 @@
 $ ->
-  nowTemp = new Date()
-  now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0)
-  checkin = $("#taskDate").datepicker(onRender: (date) ->
-    (if date.valueOf() < now.valueOf() then "disabled" else "")
-  )
-  console.log "datepicker init"
-
   json_data = {}
   $.ajax({
     url: '/home_data',
@@ -14,89 +7,83 @@ $ ->
       json_data = data
     }
   )
-  console.log "Get data"
+
+  # helpful day of the week zip
+  weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
   # backbone models
   HomeModel = Backbone.Model.extend({
     initialize: ()->
       console.log("dashboard model initialized")
     })
-  TaskModel = Backbone.Model.extend({
-
-    })
-  PlanModel = Backbone.Model.extend({
-
-    })
-  DayModel = Backbone.Model.extend({
-
-    })
-  PlannerModel = Backbone.Model.extend({
-
-    })
 
   # backbone views
   HomeView = Backbone.View.extend({
     el: '#home',
     initialize: ()->
-      this.model = new HomeModel
+      this.model = new HomeModel()
       this.input = new InputView({ model: this.model })
-      this.thisWeek = new WeekView({ type: 'this', model: this.model})
-      this.nextWeek = new WeekView({ type: 'next', model: this.model})
+      this.thisWeek = new WeekView({ which: 'this', model: this.model })
+      this.nextWeek = new WeekView({ which: 'next', model: this.model })
       this.planner = new PlannerView({ model:this.model })
     })
 
   WeekView = Backbone.View.extend(
     initialize: ()->
-      if this.type is 'this'
+      if this.options.which is 'this'
         # render this week
         this.el = '#this_week'
         this.days = []
         i = 0;
         while i < 7
-          day = new DayView({ model:this.model })
+          day = new DayView({ which:i,model:this.model })
           this.days.push(day)
-      else if this.type is 'next'
+          i += 1
+      else if this.options.which is 'next'
         # render next week
         this.el = '#next_week'
-        this.render();
+        this.days = []
+        i = 7;
+        while i < 14
+          day = new DayView({ which:i,model:this.model })
+          this.days.push(day)
+          i += 1
       else
         # what?
         console.log('You done goofed, son.')
 
     render: ()->
-      this.
 
   )
   PlannerView = Backbone.View.extend(
-    el: $(".planner")
     initialize: ->
 
     render: ->
   )
   DayView = Backbone.View.extend(
-    el: $(".day")
+    template: _.template($('#day_template').html())
     initialize: ->
+      i = this.options.which
+      this.template({ day:json_data.two_weeks[i] })
       this.tasks = []
       # for all tasks in this day, make a TaskView
+      weekday = weekdays[i%7]
+      if i < 7
+        f_or_s = "First"
+      else
+        f_or_s = "Second"
+      for task_detail in json_data.tasks[f_or_s][weekday]
+        task = new TaskView({ model:this.model, detail:task_detail })
+        this.tasks.push(task)
     render: ->
   )
   TaskView = Backbone.View.extend(
-    el: $(".task")
-    model: TaskModel
     template: _.template($("#task_template").html())
-    events:
-      "click .toggle": "toggleDone"
 
     initialize: ->
-      @listenTo @model, "change", @render
-      @listenTo @model, "destroy", @remove
   )
 
   PlanView = Backbone.View.extend(
-    el: $(".plan")
-    events:
-      "click .toggle": "toggleDone"
-
     
     # "drag" : "move"
     initialize: ->
@@ -106,16 +93,26 @@ $ ->
     move: ->
   )
   InputView = Backbone.View.extend(
-    el: $(".task_input")
-    events:
-      "keypress .add_task": "create"
+    el: $('#input_container')
+    template: _.template($('#inputter_template').html())
 
     initialize: ->
-      @home = @task_name = @$(".task_name")
-      @task_date = @$(".task_date")
-      @task_length = @$(".task_length")
+      this.render()
+      nowTemp = new Date()
+      now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0)
+      $('#dawg').datepicker(onRender: (date) ->
+        (if date.valueOf() < now.valueOf() then "disabled" else "")
+      )
 
-    create: ->
+      # this.task_name = this.$(".task_name")
+      # this.task_date = this.$(".task_date")
+      # this.task_length = this.$(".task_length")
+    render: ->
+      $(this.el).html(this.template({ today:json_data.today }));
+
+      return this
+
+    new_task: ->
       
       # trigger event "task_create name date length"
       
@@ -127,7 +124,7 @@ $ ->
 
       $.post "/addtask", data, (d, st, xr) ->
         "Done"
+  )
 
   # make the App
   App = new HomeView();
-  )
