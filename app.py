@@ -105,21 +105,34 @@ class Task(db.Model):
     due = db.Column(db.Integer)
     estimate = db.Column(db.String(120))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    plan_dates = relationship("Plan_date", backref='task', lazy='dynamic') 
+    plan_dates = db.relationship("Plan_date", backref='task', lazy='dynamic') 
 
     def __init__(self, name, due, estimate):
         self.name = name
         self.due = due
         self.estimate = estimate
 
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'id'        : self.id,
+            'name'      : self.name,
+            'completed' : self.completed,
+            'due'       : self.due,
+            'estimate'  : self.estimate,
+            'user_id'   : self.user_id,
+            'plan_dates': self.plan_dates.all()
+        }
+
 class Plan_date(db.Model):
     __tablename__ = 'plan_dates'
     id = db.Column(db.Integer, primary_key=True)
     date_stamp = db.Column(db.String(120))
-    task_id = Column(Integer, ForeignKey('tasks.id'))
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
 
-    def __init__(self, date)
-        self.date_stamp = date
+    def __init__(self, date_stamp):
+        self.date_stamp = date_stamp
 
 @app.route('/')
 def index():
@@ -231,7 +244,7 @@ def home_data():
     two_weeks = right_now + 1209600000
     one_week = right_now + 604800000
     # get unix timestamp for 2 weeks from now
-    tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks))
+    tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks)).all()
 
     tasks_yo = {"First": deepcopy(week),"Second": deepcopy(week)}
     plans_yo = deepcopy(week)
@@ -240,31 +253,32 @@ def home_data():
     # sort tasks in to day buckets
     i = 0
     while i <= 13:
-        left = i * 86400000
+        left = right_now + i * 86400000
         right = left + 86400000
         for task in tasks:
             if left <= task.due < right:
                 if i <= 6:
-                    tasks_yo["First"][aw_yeah[i]].append(task)
+                    tasks_yo["First"][aw_yeah[i]].append(task.serialize)
                 else:
-                    tasks_yo["Second"][aw_yeah[i]].append(task)
+                    tasks_yo["Second"][aw_yeah[i]].append(task.serialize)
         i += 1
     # I have tasks, and each task has dates for planning. I need to go through every task within the 2 week period,
     # find every plan, and add that task to the appropriate day.
     # Go through every task, find it's plandays.
     # for every planday, add the task to that day's list.
-    for task in tasks:
-        for planned in task.plan_dates:
-            # planned is a unix timestamp
-            # convert unix timestamp to a day, as long as it is in the right interval (right now and two weeks)
-            if right_now <= planned < one_week:
-                plans_yo[aw_yeah[datetime.fromtimestamp(planned).weekday()]].append(task)
+    # for task in tasks:
+    #     for planned in task.plan_dates:
+    #         # planned is a unix timestamp
+    #         # convert unix timestamp to a day, as long as it is in the right interval (right now and two weeks)
+    #         if right_now <= planned < one_week:
+    #             plans_yo[aw_yeah[datetime.fromtimestamp(planned).weekday()]].append(task)
 
+    print tasks_yo
     categories = g.user.categories.all()
 
     # make data into JSON object
     home_data = {"categories":categories,"tasks":tasks_yo,"two_weeks":two_week_strings,"planned":plans_yo,"today":today}
-    return jsonify(**home_data)
+    return jsonify(home_data)
 
 @app.route('/addtask', methods=['POST'])
 def parsetask():
