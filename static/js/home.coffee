@@ -108,7 +108,6 @@ $ ->
 
   TaskView = Backbone.View.extend(
     template: _.template($("#task_template").html())
-
     initialize: ->
   )
 

@@ -105,12 +105,21 @@ class Task(db.Model):
     due = db.Column(db.Integer)
     estimate = db.Column(db.String(120))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    plan_dates = db.Column(db.String(120))
+    plan_dates = relationship("Plan_date", backref='task', lazy='dynamic') 
 
     def __init__(self, name, due, estimate):
         self.name = name
         self.due = due
         self.estimate = estimate
+
+class Plan_date(db.Model):
+    __tablename__ = 'plan_dates'
+    id = db.Column(db.Integer, primary_key=True)
+    date_stamp = db.Column(db.String(120))
+    task_id = Column(Integer, ForeignKey('tasks.id'))
+
+    def __init__(self, date)
+        self.date_stamp = date
 
 @app.route('/')
 def index():
@@ -200,7 +209,7 @@ def home_data():
     while True:
         if monday.weekday() == 0:
             break
-        delta = timedelta(days=-1)
+        delta = timedelta(days = 1)
         monday -= delta
 
     # floor that Monday
