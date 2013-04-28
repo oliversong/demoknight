@@ -22,12 +22,12 @@
 
 <script type="text/template" id="inputter_template">
     <div class="task_input span12">
-        <input type="text" class="task_name" placeholder="New task">
+        <input type="text" id="task_name" placeholder="New task">
         <div class="input-append date" id="dawg" data-date="<%= today %>" data-date-format="mm-dd-yyyy">
-          <input class="span2" size="16" type="text" value="<%= today %>">
+          <input class="span2" id="task_date" size="16" type="text" value="<%= today %>">
           <span class="add-on"><i class="icon-calendar"></i></span>
         </div>
-        <select class="task_length">
+        <select id="task_length">
             <option>30 min</option>
             <option>1 hour</option>
             <option>2 hours</option>
@@ -42,6 +42,12 @@
 
 <script type="text/template" id="day_template">
     <div class="day">
+        <%= day %>
+    </div>
+</script>
+
+<script type="text/template" id="planday_template">
+    <div class="planday">
         <%= day %>
     </div>
 </script>

@@ -8,6 +8,8 @@ $ ->
     }
   )
 
+  console.log(json_data)
+
   # helpful day of the week zip
   weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -51,32 +53,59 @@ $ ->
       else
         # what?
         console.log('You done goofed, son.')
-
-    render: ()->
-
   )
+
   PlannerView = Backbone.View.extend(
+    el: '#planner'
     initialize: ->
+      this.plandays = []
+      i = 0;
+      while i < 7
+        planday = new PlanDayView({ which:i, model:this.model })
+        this.plandays.push(planday)
+        i += 1
 
     render: ->
   )
+
   DayView = Backbone.View.extend(
     template: _.template($('#day_template').html())
     initialize: ->
       i = this.options.which
-      this.template({ day:json_data.two_weeks[i] })
       this.tasks = []
       # for all tasks in this day, make a TaskView
       weekday = weekdays[i%7]
       if i < 7
         f_or_s = "First"
+        this.render('this_week',i)
       else
         f_or_s = "Second"
+        this.render('next_week',i)
       for task_detail in json_data.tasks[f_or_s][weekday]
         task = new TaskView({ model:this.model, detail:task_detail })
         this.tasks.push(task)
-    render: ->
+    render: (week,i) ->
+      $('#'+week).append(this.template({ day:json_data.two_weeks[i] }))
+      console.log('rendering a day')
+      return this
   )
+
+  PlanDayView = Backbone.View.extend(
+    template: _.template($('#planday_template').html())
+    initialize: ->
+      i = this.options.which
+      this.plans = []
+      weekday = weekdays[i]
+      for plan_detail in json_data.planned[weekday]
+        plan = new PlanView({ model:this.model, detail:plan_detail })
+        this.plans.push(plan)
+      this.render(i)
+    render: (i) ->
+      $('#planner').append(this.template({ day:json_data.two_weeks[i] }))
+      return this
+
+  )
+
   TaskView = Backbone.View.extend(
     template: _.template($("#task_template").html())
 
@@ -95,6 +124,9 @@ $ ->
   InputView = Backbone.View.extend(
     el: $('#input_container')
     template: _.template($('#inputter_template').html())
+    events: {
+      "click .add_task"   : "new_task"
+    }
 
     initialize: ->
       this.render()
@@ -104,26 +136,27 @@ $ ->
         (if date.valueOf() < now.valueOf() then "disabled" else "")
       )
 
-      # this.task_name = this.$(".task_name")
-      # this.task_date = this.$(".task_date")
-      # this.task_length = this.$(".task_length")
+      this.task_name = this.$("#task_name")
+      this.task_date = this.$("#task_date")
+      this.task_length = this.$("#task_length")
+
     render: ->
       $(this.el).html(this.template({ today:json_data.today }));
 
       return this
 
     new_task: ->
-      
-      # trigger event "task_create name date length"
-      
       # ajax post it to the server
       data =
-        name: @task_name
-        date: @task_date
-        length: @task_length
+        name: @task_name.val()
+        date: @task_date.val()
+        length: @task_length.val()
+
+      # trigger event "task_create name date length"
+      this.model.trigger('new_task',data)
 
       $.post "/addtask", data, (d, st, xr) ->
-        "Done"
+        console.log("Done")
   )
 
   # make the App

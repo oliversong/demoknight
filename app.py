@@ -316,9 +316,10 @@ def parsetask():
 
         # Assume that inputs come in already parsed
         name = request.form['name']
-        day_string = request.form['due_day']  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
-        time_string = request.form['due_time']  # HH:MM
-        estimate = request.form['estimate']
+        day_string = request.form['date']  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+        #time_string = request.form['due_time']  # HH:MM
+        time_string = '12AM'
+        estimate = request.form['length']
 
         dt = None
 
@@ -326,7 +327,7 @@ def parsetask():
         due, what = cal.parse(day_string+' '+time_string)
         if what in (1, 2):
             # result is struct_time
-            dt = datetime.datetime(*due[:6])
+            dt = datetime(*due[:6])
         elif what == 3:
             # result is datetime
             dt = due

@@ -2,7 +2,7 @@
 (function() {
 
   $(function() {
-    var App, DayView, HomeModel, HomeView, InputView, PlanView, PlannerView, TaskView, WeekView, json_data, weekdays;
+    var App, DayView, HomeModel, HomeView, InputView, PlanDayView, PlanView, PlannerView, TaskView, WeekView, json_data, weekdays;
     json_data = {};
     $.ajax({
       url: '/home_data',
@@ -11,6 +11,7 @@
         return json_data = data;
       }
     });
+    console.log(json_data);
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     HomeModel = Backbone.Model.extend({
       initialize: function() {
@@ -71,11 +72,25 @@
         } else {
           return console.log('You done goofed, son.');
         }
-      },
-      render: function() {}
+      }
     });
     PlannerView = Backbone.View.extend({
-      initialize: function() {},
+      el: '#planner',
+      initialize: function() {
+        var i, planday, _results;
+        this.plandays = [];
+        i = 0;
+        _results = [];
+        while (i < 7) {
+          planday = new PlanDayView({
+            which: i,
+            model: this.model
+          });
+          this.plandays.push(planday);
+          _results.push(i += 1);
+        }
+        return _results;
+      },
       render: function() {}
     });
     DayView = Backbone.View.extend({
@@ -83,15 +98,14 @@
       initialize: function() {
         var f_or_s, i, task, task_detail, weekday, _i, _len, _ref, _results;
         i = this.options.which;
-        this.template({
-          day: json_data.two_weeks[i]
-        });
         this.tasks = [];
         weekday = weekdays[i % 7];
         if (i < 7) {
           f_or_s = "First";
+          this.render('this_week', i);
         } else {
           f_or_s = "Second";
+          this.render('next_week', i);
         }
         _ref = json_data.tasks[f_or_s][weekday];
         _results = [];
@@ -105,7 +119,38 @@
         }
         return _results;
       },
-      render: function() {}
+      render: function(week, i) {
+        $('#' + week).append(this.template({
+          day: json_data.two_weeks[i]
+        }));
+        console.log('rendering a day');
+        return this;
+      }
+    });
+    PlanDayView = Backbone.View.extend({
+      template: _.template($('#planday_template').html()),
+      initialize: function() {
+        var i, plan, plan_detail, weekday, _i, _len, _ref;
+        i = this.options.which;
+        this.plans = [];
+        weekday = weekdays[i];
+        _ref = json_data.planned[weekday];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          plan_detail = _ref[_i];
+          plan = new PlanView({
+            model: this.model,
+            detail: plan_detail
+          });
+          this.plans.push(plan);
+        }
+        return this.render(i);
+      },
+      render: function(i) {
+        $('#planner').append(this.template({
+          day: json_data.two_weeks[i]
+        }));
+        return this;
+      }
     });
     TaskView = Backbone.View.extend({
       template: _.template($("#task_template").html()),
@@ -119,12 +164,15 @@
     InputView = Backbone.View.extend({
       el: $('#input_container'),
       template: _.template($('#inputter_template').html()),
+      events: {
+        "click .add_task": "new_task"
+      },
       initialize: function() {
         var now, nowTemp;
         this.render();
         nowTemp = new Date();
         now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
-        return $('#dawg').datepicker({
+        $('#dawg').datepicker({
           onRender: function(date) {
             if (date.valueOf() < now.valueOf()) {
               return "disabled";
@@ -133,6 +181,9 @@
             }
           }
         });
+        this.task_name = this.$("#task_name");
+        this.task_date = this.$("#task_date");
+        return this.task_length = this.$("#task_length");
       },
       render: function() {
         $(this.el).html(this.template({
@@ -143,12 +194,13 @@
       new_task: function() {
         var data;
         data = {
-          name: this.task_name,
-          date: this.task_date,
-          length: this.task_length
+          name: this.task_name.val(),
+          date: this.task_date.val(),
+          length: this.task_length.val()
         };
+        this.model.trigger('new_task', data);
         return $.post("/addtask", data, function(d, st, xr) {
-          return "Done";
+          return console.log("Done");
         });
       }
     });
