@@ -54,11 +54,11 @@
 
 <script type="text/template" id="task_template">
     <div class="task">
-        <input class="toggle" type="checkbox" <% if(task.done=="true"){ %><%='checked="checked"' %><% } %> />
-        <label> <%= task.name %> </label>
+        <input class="toggle" type="checkbox" <% if(done=="true"){ %><%='checked="checked"' %><% } %> />
+        <label> <%= name %> </label>
         <a class="destroy"></a>
     </div>
-    <input class="edit" type="text" value="<%= task.name %>" />
+    <input class="edit" type="text" value="<%= name %>" />
 </script>
 
 <script type="text/template" id="plan_template">

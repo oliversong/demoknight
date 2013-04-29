@@ -34,20 +34,20 @@ $ ->
     initialize: ()->
       if this.options.which is 'this'
         # render this week
-        this.el = '#this_week'
+        this.el = $('#this_week')
         this.days = []
         i = 0;
         while i < 7
-          day = new DayView({ which:i,model:this.model })
+          day = new DayView({ which:i,model:this.model,parent:this.el })
           this.days.push(day)
           i += 1
       else if this.options.which is 'next'
         # render next week
-        this.el = '#next_week'
+        this.el = $('#next_week')
         this.days = []
         i = 7;
         while i < 14
-          day = new DayView({ which:i,model:this.model })
+          day = new DayView({ which:i,model:this.model,parent:this.el })
           this.days.push(day)
           i += 1
       else
@@ -72,21 +72,24 @@ $ ->
     template: _.template($('#day_template').html())
     initialize: ->
       i = this.options.which
-      this.tasks = []
+      this.parent = this.options.parent
       # for all tasks in this day, make a TaskView
+      this.tasks = []
       weekday = weekdays[i%7]
+      segment = this.template({ day:json_data.two_weeks[i] })
       if i < 7
         f_or_s = "First"
-        this.render('this_week',i)
       else
         f_or_s = "Second"
-        this.render('next_week',i)
-      for task_detail in json_data.tasks[f_or_s][weekday]
-        task = new TaskView({ model:this.model, detail:task_detail })
-        this.tasks.push(task)
-    render: (week,i) ->
-      $('#'+week).append(this.template({ day:json_data.two_weeks[i] }))
-      console.log('rendering a day')
+      tasks_list = json_data.tasks[f_or_s][weekday]
+      for task_detail in tasks_list
+        this.tasks.push(new TaskView({ model:this.model, detail:task_detail }))
+      this.render(segment)
+
+    render: (segment) ->
+      this.parent.append(segment)
+      for task in this.tasks
+        this.$el.append(task.render())
       return this
   )
 
@@ -103,12 +106,16 @@ $ ->
     render: (i) ->
       $('#planner').append(this.template({ day:json_data.two_weeks[i] }))
       return this
-
   )
 
   TaskView = Backbone.View.extend(
     template: _.template($("#task_template").html())
     initialize: ->
+      this.details = this.options.detail
+    render: ->
+      this.$el.html(this.template({ done:this.details.completed, name:this.details.name }))
+      this.delegateEvents()
+      return this
   )
 
   PlanView = Backbone.View.extend(
