@@ -34,21 +34,19 @@ $ ->
     initialize: ()->
       if this.options.which is 'this'
         # render this week
-        this.el = $('#this_week')
-        this.days = []
+        this.el = '#this_week'
         i = 0;
         while i < 7
-          day = new DayView({ which:i,model:this.model,parent:this.el })
-          this.days.push(day)
+          day = new DayView({ which:i,model:this.model })
+          $(this.el).append(day.render().el)
           i += 1
       else if this.options.which is 'next'
         # render next week
-        this.el = $('#next_week')
-        this.days = []
+        this.el = '#next_week'
         i = 7;
         while i < 14
-          day = new DayView({ which:i,model:this.model,parent:this.el })
-          this.days.push(day)
+          day = new DayView({ which:i,model:this.model })
+          $(this.el).append(day.render().el)
           i += 1
       else
         # what?
@@ -71,25 +69,26 @@ $ ->
   DayView = Backbone.View.extend(
     template: _.template($('#day_template').html())
     initialize: ->
-      i = this.options.which
-      this.parent = this.options.parent
-      # for all tasks in this day, make a TaskView
-      this.tasks = []
-      weekday = weekdays[i%7]
-      segment = this.template({ day:json_data.two_weeks[i] })
-      if i < 7
+      # i is which day
+      this.i = this.options.which
+      this.weekday = weekdays[this.i%7]
+      # render template
+      if this.i < 7
         f_or_s = "First"
       else
         f_or_s = "Second"
-      tasks_list = json_data.tasks[f_or_s][weekday]
+      # get the tasks
+      tasks_list = json_data.tasks[f_or_s][this.weekday]
+      # for all tasks in this day, make a TaskView
+      this.tasks = []
       for task_detail in tasks_list
         this.tasks.push(new TaskView({ model:this.model, detail:task_detail }))
-      this.render(segment)
 
-    render: (segment) ->
-      this.parent.append(segment)
+    render: () ->
+      this.$el.html(this.template({ day:json_data.two_weeks[this.i] }))
       for task in this.tasks
         this.$el.append(task.render())
+      console.log(this)
       return this
   )
 
@@ -115,7 +114,7 @@ $ ->
     render: ->
       this.$el.html(this.template({ done:this.details.completed, name:this.details.name }))
       this.delegateEvents()
-      return this
+      return this.$el
   )
 
   PlanView = Backbone.View.extend(

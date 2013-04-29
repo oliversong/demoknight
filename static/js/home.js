@@ -42,32 +42,28 @@
       initialize: function() {
         var day, i, _results, _results1;
         if (this.options.which === 'this') {
-          this.el = $('#this_week');
-          this.days = [];
+          this.el = '#this_week';
           i = 0;
           _results = [];
           while (i < 7) {
             day = new DayView({
               which: i,
-              model: this.model,
-              parent: this.el
+              model: this.model
             });
-            this.days.push(day);
+            $(this.el).append(day.render().el);
             _results.push(i += 1);
           }
           return _results;
         } else if (this.options.which === 'next') {
-          this.el = $('#next_week');
-          this.days = [];
+          this.el = '#next_week';
           i = 7;
           _results1 = [];
           while (i < 14) {
             day = new DayView({
               which: i,
-              model: this.model,
-              parent: this.el
+              model: this.model
             });
-            this.days.push(day);
+            $(this.el).append(day.render().el);
             _results1.push(i += 1);
           }
           return _results1;
@@ -98,37 +94,37 @@
     DayView = Backbone.View.extend({
       template: _.template($('#day_template').html()),
       initialize: function() {
-        var f_or_s, i, segment, task_detail, tasks_list, weekday, _i, _len;
-        i = this.options.which;
-        this.parent = this.options.parent;
-        this.tasks = [];
-        weekday = weekdays[i % 7];
-        segment = this.template({
-          day: json_data.two_weeks[i]
-        });
-        if (i < 7) {
+        var f_or_s, task_detail, tasks_list, _i, _len, _results;
+        this.i = this.options.which;
+        this.weekday = weekdays[this.i % 7];
+        if (this.i < 7) {
           f_or_s = "First";
         } else {
           f_or_s = "Second";
         }
-        tasks_list = json_data.tasks[f_or_s][weekday];
+        tasks_list = json_data.tasks[f_or_s][this.weekday];
+        this.tasks = [];
+        _results = [];
         for (_i = 0, _len = tasks_list.length; _i < _len; _i++) {
           task_detail = tasks_list[_i];
-          this.tasks.push(new TaskView({
+          _results.push(this.tasks.push(new TaskView({
             model: this.model,
             detail: task_detail
-          }));
+          })));
         }
-        return this.render(segment);
+        return _results;
       },
-      render: function(segment) {
+      render: function() {
         var task, _i, _len, _ref;
-        this.parent.append(segment);
+        this.$el.html(this.template({
+          day: json_data.two_weeks[this.i]
+        }));
         _ref = this.tasks;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           task = _ref[_i];
           this.$el.append(task.render());
         }
+        console.log(this);
         return this;
       }
     });
@@ -168,7 +164,7 @@
           name: this.details.name
         }));
         this.delegateEvents();
-        return this;
+        return this.$el;
       }
     });
     PlanView = Backbone.View.extend({

@@ -241,8 +241,8 @@ def home_data():
     # get two weeks worth of tasks
     # get current unix timestamp TODO: This is wrong
     right_now = time.mktime(monday.timetuple())
-    two_weeks = right_now + 1209600000
-    one_week = right_now + 604800000
+    two_weeks = right_now + 1209600
+    one_week = right_now + 604800
     # get unix timestamp for 2 weeks from now
     tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks)).all()
 
@@ -253,8 +253,8 @@ def home_data():
     # sort tasks in to day buckets
     i = 0
     while i <= 13:
-        left = right_now + i * 86400000
-        right = left + 86400000
+        left = right_now + i * 86400
+        right = left + 86400
         for task in tasks:
             if left <= task.due < right:
                 if i <= 6:
