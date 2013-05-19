@@ -27,6 +27,7 @@ a {
 }
 .task {
   float: left;
+  width: 100%;
 }
 .plan {
   border-left: 1px solid #EEE;
@@ -37,4 +38,10 @@ a {
   border-left: 1px solid #EEE;
   margin-left: -1px;
   padding-left: 20px;
+}
+.edit {
+  display: none;
+}
+.task span {
+  text-decoration: none;
 }

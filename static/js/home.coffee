@@ -110,6 +110,9 @@ $ ->
 
   TaskView = Backbone.View.extend(
     template: _.template($("#task_template").html())
+    events: {
+      "click .toggle"   : "task_checked"
+    }
     initialize: ->
       this.details = this.options.detail
     render: ->
@@ -117,6 +120,13 @@ $ ->
       this.$el.html(this.template({ done:this.details.completed, name:this.details.name }))
       this.delegateEvents()
       return this.$el
+    task_checked: ->
+      checkbox = $($(event.currentTarget).children()[1])
+      console.log(checkbox.css('text-decoration'))
+      if checkbox.css('text-decoration') is 'none'
+        checkbox.css('text-decoration','line-through')
+      else
+        checkbox.css('text-decoration','none')
   )
 
   PlanView = Backbone.View.extend(

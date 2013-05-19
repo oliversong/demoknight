@@ -51,8 +51,8 @@
 </script>
 
 <script type="text/template" id="task_template">
-    <input class="toggle" type="checkbox" <% if(done=="true"){ %><%='checked="checked"' %><% } %> />
-    <label> <%= name %> </label>
+    <input class="toggle pull-left" type="checkbox" <% if(done=="true"){ %><%='checked="checked"' %><% } %>>
+    <span class="pull-left"><%= name %></span>
     <a class="destroy"></a>
     <input class="edit" type="text" value="<%= name %>" />
 </script>

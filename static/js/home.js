@@ -156,6 +156,9 @@
     });
     TaskView = Backbone.View.extend({
       template: _.template($("#task_template").html()),
+      events: {
+        "click .toggle": "task_checked"
+      },
       initialize: function() {
         return this.details = this.options.detail;
       },
@@ -167,6 +170,16 @@
         }));
         this.delegateEvents();
         return this.$el;
+      },
+      task_checked: function() {
+        var checkbox;
+        checkbox = $($(event.currentTarget).children()[1]);
+        console.log(checkbox.css('text-decoration'));
+        if (checkbox.css('text-decoration') === 'none') {
+          return checkbox.css('text-decoration', 'line-through');
+        } else {
+          return checkbox.css('text-decoration', 'none');
+        }
       }
     });
     PlanView = Backbone.View.extend({
