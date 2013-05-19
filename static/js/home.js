@@ -116,6 +116,7 @@
       },
       render: function() {
         var task, _i, _len, _ref;
+        this.$el.addClass('weekday');
         this.$el.html(this.template({
           day: json_data.two_weeks[this.i]
         }));
@@ -159,6 +160,7 @@
         return this.details = this.options.detail;
       },
       render: function() {
+        this.$el.addClass('task');
         this.$el.html(this.template({
           done: this.details.completed,
           name: this.details.name

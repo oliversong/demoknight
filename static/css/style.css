@@ -17,11 +17,16 @@ body {
 a {
   text-decoration: none !important;
 }
-.day,
+.weekday,
 .planday {
-  height: 100px;
+  min-height: 100px;
   margin-top: 5px;
   margin-right: 20px;
+  float: left;
+  width: 100%;
+}
+.task {
+  float: left;
 }
 .plan {
   border-left: 1px solid #EEE;

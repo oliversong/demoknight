@@ -229,8 +229,10 @@ def home_data():
     monday = monday - timedelta(hours=monday.hour,minutes=monday.minute,seconds=monday.second,microseconds=monday.microsecond)
 
     week = {"Monday":[],"Tuesday":[],"Wednesday":[],"Thursday":[],"Friday":[],"Saturday":[],"Sunday":[]}
+    weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+
     # zip it up
-    aw_yeah = dict(zip(range(7),week.keys()))
+    aw_yeah = dict(zip(range(7),weekdays))
 
     # time to count forward
     for x in range(14):
@@ -248,7 +250,6 @@ def home_data():
 
     tasks_yo = {"First": deepcopy(week),"Second": deepcopy(week)}
     plans_yo = deepcopy(week)
-    
 
     # sort tasks in to day buckets
     i = 0
@@ -260,7 +261,7 @@ def home_data():
                 if i <= 6:
                     tasks_yo["First"][aw_yeah[i]].append(task.serialize)
                 else:
-                    tasks_yo["Second"][aw_yeah[i]].append(task.serialize)
+                    tasks_yo["Second"][aw_yeah[i%6]].append(task.serialize)
         i += 1
     # I have tasks, and each task has dates for planning. I need to go through every task within the 2 week period,
     # find every plan, and add that task to the appropriate day.
@@ -273,7 +274,6 @@ def home_data():
     #         if right_now <= planned < one_week:
     #             plans_yo[aw_yeah[datetime.fromtimestamp(planned).weekday()]].append(task)
 
-    print tasks_yo
     categories = g.user.categories.all()
 
     # make data into JSON object
@@ -339,7 +339,7 @@ def parsetask():
 
         # Assume that inputs come in already parsed
         name = request.form['name']
-        day_string = request.form['date']  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+        day_string = request.form['date'].replace('-','/')  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
         #time_string = request.form['due_time']  # HH:MM
         time_string = '12AM'
         estimate = request.form['length']
@@ -347,7 +347,8 @@ def parsetask():
         dt = None
 
         cal = pdt.Calendar()
-        due, what = cal.parse(day_string+' '+time_string)
+        due, what = cal.parse(day_string+' at '+time_string)
+        print due, what
         if what in (1, 2):
             # result is struct_time
             dt = datetime(*due[:6])

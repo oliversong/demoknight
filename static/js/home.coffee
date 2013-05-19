@@ -85,6 +85,7 @@ $ ->
         this.tasks.push(new TaskView({ model:this.model, detail:task_detail }))
 
     render: () ->
+      this.$el.addClass('weekday')
       this.$el.html(this.template({ day:json_data.two_weeks[this.i] }))
       for task in this.tasks
         this.$el.append(task.render())
@@ -112,6 +113,7 @@ $ ->
     initialize: ->
       this.details = this.options.detail
     render: ->
+      this.$el.addClass('task')
       this.$el.html(this.template({ done:this.details.completed, name:this.details.name }))
       this.delegateEvents()
       return this.$el

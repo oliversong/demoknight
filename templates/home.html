@@ -7,7 +7,7 @@
     <div class="row" id="input_container">
 
     </div>
-	<div class="row">
+	<div class="row boom">
         <div class="span4 week" id="this_week">
         </div>
         <div class="span4 week" id="planner">
@@ -41,23 +41,19 @@
 </script>
 
 <script type="text/template" id="day_template">
-    <div class="day">
-        <%= day %>
-    </div>
+    <div><%= day %></div>
 </script>
 
 <script type="text/template" id="planday_template">
     <div class="planday">
-        <%= day %>
+        <div><%= day %></div>
     </div>
 </script>
 
 <script type="text/template" id="task_template">
-    <div class="task">
-        <input class="toggle" type="checkbox" <% if(done=="true"){ %><%='checked="checked"' %><% } %> />
-        <label> <%= name %> </label>
-        <a class="destroy"></a>
-    </div>
+    <input class="toggle" type="checkbox" <% if(done=="true"){ %><%='checked="checked"' %><% } %> />
+    <label> <%= name %> </label>
+    <a class="destroy"></a>
     <input class="edit" type="text" value="<%= name %>" />
 </script>
 
