@@ -259,10 +259,10 @@ def home_data():
         for task in tasks:
             if left <= task.due < right:
                 if i <= 6:
-                    print "task between ", left, " and ", right, "looks like ", aw_yeah[i], "index ",i
+                    # print "task between ", left, " and ", right, "looks like ", aw_yeah[i], "index ",i
                     tasks_yo["First"][aw_yeah[i]].append(task.serialize)
                 else:
-                    print "task between ", left, " and ", right, "looks like ", aw_yeah[i%7], "index ",i
+                    # print "task between ", left, " and ", right, "looks like ", aw_yeah[i%7], "index ",i
                     tasks_yo["Second"][aw_yeah[i%7]].append(task.serialize)
         i += 1
     # I have tasks, and each task has dates for planning. I need to go through every task within the 2 week period,
@@ -372,7 +372,7 @@ def parsetask():
         print task
         g.user.tasks.append(task)
         db.session.commit()
-        return "Done"
+        return str(task.id)
 
 @app.route('/check', methods=['POST'])
 def check():
@@ -416,6 +416,21 @@ def delete():
     task = db.session.query(Task).filter(Task.user == g.user).filter(Task.id == task_id).all()
     if len(task) == 1 and task[0] in g.user.tasks.all():
         db.session.delete(task[0])
+        db.session.commit()
+        return "Done"
+    else:
+        abort(404)
+
+@app.route('/update', methods=['POST'])
+def update():
+    if not g.user:
+        abort(404)
+    task_id = request.form['task_id']
+    task_id = task_id.split('_')[1]
+    new_name = request.form['new_name']
+    task = db.session.query(Task).filter(Task.user == g.user).filter(Task.id == task_id).all()
+    if len(task) == 1 and task[0] in g.user.tasks.all():
+        task[0].name = new_name
         db.session.commit()
         return "Done"
     else:

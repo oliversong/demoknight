@@ -1,9 +1,5 @@
 * Drag and drop for plans
 * Delete plan
-* Correctly edit task name
-* Clear form on edit task name
-* Clear form on task create
-* Append task on task create
 * Heatmap
 
 Done
@@ -12,3 +8,7 @@ Done
 * Should append the task to the day
 * Checkbox should mark as completed
 * Delete task
+* Correctly edit task name
+* Clear form on edit task name
+* Clear form on task create
+* Append task on task create

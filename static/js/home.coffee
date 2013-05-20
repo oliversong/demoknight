@@ -70,7 +70,7 @@ $ ->
     events: {
       "click .herp"         : "show_inputter",
       "click .input_cover"  : "swap_back",
-      "keypress .checker"      : "keypress_check"
+      "keypress .checker"   : "keypress_check"
     },
     initialize: ->
       # i is which day
@@ -126,11 +126,23 @@ $ ->
           date: task_date
           length: task_duration
 
+        task_detail =
+          completed: false
+          id: -1
+          name: task_name
+        new_task = new TaskView({ model:this.model, detail:task_detail })
+        this.tasks.push(new_task)
+        herp.before(new_task.render())
+
         $.post "/addtask", data, (d, st, xr) ->
+          this_el.children()[this_el.children().length-4].setAttribute('id','task_'+d)
           console.log("Done")      
 
+        # task_detail required completed, id, name. Probably will need estimate later.
         herp.show()
         inputter.hide()
+        $(inputter.children()[0]).val('')
+        $(inputter.children()[2]).val('')
         cover.hide()
       
   )
@@ -205,18 +217,34 @@ $ ->
         task_name.hide()  
         edit_field.show()
         input_cover.show()
+        edit_field.focus()
     check_key: (e)->
       if (e.keyCode == 13)
-        swap_back()
+        this.swap_back()
     swap_back: ->
       this_el = $(event.currentTarget)
-      task_name = $(this_el.children()[1])
-      edit_field = $(this_el.children()[2])
-      input_cover = $(this_el.children()[3])
+      ho = this_el.children()
+      task_name = $(ho[1])
+      edit_field = $(ho[2])
+      input_cover = $(ho[3])
       # submit edit
-      task_name.show()
-      edit_field.hide()
-      input_cover.hide()
+      if edit_field.val() == ho[1].innerHTML
+        # empty
+        task_name.show()
+        edit_field.hide()
+        input_cover.hide()
+      else
+        id = event.currentTarget.id
+        data=
+          task_id: id
+          new_name: edit_field.val()
+        $.post "/update", data, (d, st, xr) ->
+          console.log("Task updated")
+        task_name.text(edit_field.val())
+        task_name.show()
+        edit_field.hide()
+        input_cover.hide()
+
     delete: ->
       id = event.currentTarget.id
       data =

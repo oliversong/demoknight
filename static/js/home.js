@@ -145,7 +145,7 @@
         }
       },
       swap_back: function() {
-        var cover, data, herp, inputter, task_date, task_duration, task_name, this_el;
+        var cover, data, herp, inputter, new_task, task_date, task_detail, task_duration, task_name, this_el;
         this_el = $(event.currentTarget);
         herp = $(this_el.children()[this_el.children().length - 3]);
         inputter = $(this_el.children()[this_el.children().length - 2]);
@@ -166,11 +166,25 @@
             date: task_date,
             length: task_duration
           };
+          task_detail = {
+            completed: false,
+            id: -1,
+            name: task_name
+          };
+          new_task = new TaskView({
+            model: this.model,
+            detail: task_detail
+          });
+          this.tasks.push(new_task);
+          herp.before(new_task.render());
           $.post("/addtask", data, function(d, st, xr) {
+            this_el.children()[this_el.children().length - 4].setAttribute('id', 'task_' + d);
             return console.log("Done");
           });
           herp.show();
           inputter.hide();
+          $(inputter.children()[0]).val('');
+          $(inputter.children()[2]).val('');
           return cover.hide();
         }
       }
@@ -267,23 +281,40 @@
         if (edit_field.css('dispay', 'none')) {
           task_name.hide();
           edit_field.show();
-          return input_cover.show();
+          input_cover.show();
+          return edit_field.focus();
         }
       },
       check_key: function(e) {
         if (e.keyCode === 13) {
-          return swap_back();
+          return this.swap_back();
         }
       },
       swap_back: function() {
-        var edit_field, input_cover, task_name, this_el;
+        var data, edit_field, ho, id, input_cover, task_name, this_el;
         this_el = $(event.currentTarget);
-        task_name = $(this_el.children()[1]);
-        edit_field = $(this_el.children()[2]);
-        input_cover = $(this_el.children()[3]);
-        task_name.show();
-        edit_field.hide();
-        return input_cover.hide();
+        ho = this_el.children();
+        task_name = $(ho[1]);
+        edit_field = $(ho[2]);
+        input_cover = $(ho[3]);
+        if (edit_field.val() === ho[1].innerHTML) {
+          task_name.show();
+          edit_field.hide();
+          return input_cover.hide();
+        } else {
+          id = event.currentTarget.id;
+          data = {
+            task_id: id,
+            new_name: edit_field.val()
+          };
+          $.post("/update", data, function(d, st, xr) {
+            return console.log("Task updated");
+          });
+          task_name.text(edit_field.val());
+          task_name.show();
+          edit_field.hide();
+          return input_cover.hide();
+        }
       },
       "delete": function() {
         var data, id;
