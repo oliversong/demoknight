@@ -29,6 +29,13 @@ a {
   float: left;
   width: 100%;
 }
+.task:hover {
+  background-color: #EEE;
+  cursor: pointer;
+}
+.task:hover .delete_task {
+  opacity: 0.5;
+}
 .plan {
   border-left: 1px solid #EEE;
   margin-left: -1px;
@@ -41,7 +48,54 @@ a {
 }
 .edit {
   display: none;
+  position: relative;
+  z-index: 3;
 }
 .task span {
   text-decoration: none;
+}
+.input_cover {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  z-index: 1;
+  display: none;
+}
+.task_length {
+  width: 80px;
+}
+.estimate {
+  -webkit-border-radius: 0px 4px 4px 0px !important;
+  -moz-border-radius: 0px 4px 4px 0px !important;
+  border-radius: 0px 4px 4px 0px !important;
+  border-left: none !important;
+}
+.herp {
+  display: inherit;
+  width: 100%;
+  height: 30px;
+  float: left;
+  color: #FFF;
+}
+.herp:hover {
+  background-color: #EEE;
+  cursor: pointer;
+  color: #CCC;
+}
+.task_inputter {
+  display: none;
+  position: relative;
+  z-index: 3;
+  float: left;
+}
+.checked {
+  text-decoration: line-through !important;
+}
+.delete_task {
+  opacity: 0;
+}
+.delete_task:hover {
+  opacity: 0.8 !important;
 }

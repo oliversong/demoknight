@@ -2,7 +2,7 @@
 (function() {
 
   $(function() {
-    var App, DayView, HomeModel, HomeView, InputView, PlanDayView, PlanView, PlannerView, TaskView, WeekView, json_data, weekdays;
+    var App, DayView, HomeModel, HomeView, PlanDayView, PlanView, PlannerView, TaskView, WeekView, json_data, weekdays;
     json_data = {};
     $.ajax({
       url: '/home_data',
@@ -22,9 +22,6 @@
       el: '#home',
       initialize: function() {
         this.model = new HomeModel();
-        this.input = new InputView({
-          model: this.model
-        });
         this.thisWeek = new WeekView({
           which: 'this',
           model: this.model
@@ -93,6 +90,11 @@
     });
     DayView = Backbone.View.extend({
       template: _.template($('#day_template').html()),
+      events: {
+        "click .herp": "show_inputter",
+        "click .input_cover": "swap_back",
+        "keypress .checker": "keypress_check"
+      },
       initialize: function() {
         var f_or_s, task_detail, tasks_list, _i, _len, _results;
         this.i = this.options.which;
@@ -123,10 +125,54 @@
         _ref = this.tasks;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           task = _ref[_i];
-          this.$el.append(task.render());
+          $(this.$el.children()[0]).after(task.render());
         }
-        console.log(this);
         return this;
+      },
+      show_inputter: function() {
+        var cover, herp, inputter, this_el;
+        this_el = $(event.currentTarget);
+        herp = $(this_el.children()[this_el.children().length - 3]);
+        inputter = $(this_el.children()[this_el.children().length - 2]);
+        cover = $(this_el.children()[this_el.children().length - 1]);
+        herp.hide();
+        inputter.show();
+        return cover.show();
+      },
+      keypress_check: function(e) {
+        if (e.keyCode === 13) {
+          return this.swap_back();
+        }
+      },
+      swap_back: function() {
+        var cover, data, herp, inputter, task_date, task_duration, task_name, this_el;
+        this_el = $(event.currentTarget);
+        herp = $(this_el.children()[this_el.children().length - 3]);
+        inputter = $(this_el.children()[this_el.children().length - 2]);
+        cover = $(this_el.children()[this_el.children().length - 1]);
+        task_name = inputter.children()[0].value;
+        task_duration = inputter.children()[2].value;
+        task_date = this_el.children()[0].innerHTML;
+        if (task_name === '') {
+          herp.show();
+          inputter.hide();
+          return cover.hide();
+        } else {
+          if (task_duration === '') {
+            task_duration = '1 hour';
+          }
+          data = {
+            name: task_name,
+            date: task_date,
+            length: task_duration
+          };
+          $.post("/addtask", data, function(d, st, xr) {
+            return console.log("Done");
+          });
+          herp.show();
+          inputter.hide();
+          return cover.hide();
+        }
       }
     });
     PlanDayView = Backbone.View.extend({
@@ -157,14 +203,26 @@
     TaskView = Backbone.View.extend({
       template: _.template($("#task_template").html()),
       events: {
-        "click .toggle": "task_checked"
+        "click .toggle": "task_checked",
+        "dblclick .task_name": "edit_name",
+        "click .input_cover": "swap_back",
+        "keypress .edit": "check_key",
+        "click .delete_task": "delete"
       },
       initialize: function() {
         return this.details = this.options.detail;
       },
       render: function() {
+        var completed;
         this.$el.addClass('task');
+        this.$el.attr('id', 'task_' + this.details.id);
+        if (this.details.completed === true) {
+          completed = 'checked';
+        } else {
+          completed = '';
+        }
         this.$el.html(this.template({
+          checked: completed,
           done: this.details.completed,
           name: this.details.name
         }));
@@ -172,63 +230,77 @@
         return this.$el;
       },
       task_checked: function() {
-        var checkbox;
+        var checkbox, checked, classList, data, id;
         checkbox = $($(event.currentTarget).children()[1]);
-        console.log(checkbox.css('text-decoration'));
-        if (checkbox.css('text-decoration') === 'none') {
-          return checkbox.css('text-decoration', 'line-through');
+        classList = checkbox.attr('class').split(/\s+/);
+        checked = false;
+        $.each(classList, function(index, item) {
+          if (item === 'checked') {
+            return checked = true;
+          }
+        });
+        id = event.currentTarget.id;
+        if (!checked) {
+          checkbox.addClass('checked');
+          data = {
+            task_id: id
+          };
+          return $.post("/check", data, function(d, st, xr) {
+            return console.log("Marked as complete");
+          });
         } else {
-          return checkbox.css('text-decoration', 'none');
+          checkbox.removeClass('checked');
+          data = {
+            task_id: id
+          };
+          return $.post("/uncheck", data, function(d, st, xr) {
+            return console.log("Marked as complete");
+          });
         }
+      },
+      edit_name: function() {
+        var edit_field, input_cover, task_name, this_el;
+        this_el = $(event.currentTarget);
+        task_name = $(this_el.children()[1]);
+        edit_field = $(this_el.children()[2]);
+        input_cover = $(this_el.children()[3]);
+        if (edit_field.css('dispay', 'none')) {
+          task_name.hide();
+          edit_field.show();
+          return input_cover.show();
+        }
+      },
+      check_key: function(e) {
+        if (e.keyCode === 13) {
+          return swap_back();
+        }
+      },
+      swap_back: function() {
+        var edit_field, input_cover, task_name, this_el;
+        this_el = $(event.currentTarget);
+        task_name = $(this_el.children()[1]);
+        edit_field = $(this_el.children()[2]);
+        input_cover = $(this_el.children()[3]);
+        task_name.show();
+        edit_field.hide();
+        return input_cover.hide();
+      },
+      "delete": function() {
+        var data, id;
+        id = event.currentTarget.id;
+        data = {
+          task_id: id
+        };
+        $.post("/delete", data, function(d, st, xr) {
+          return console.log("Deleted");
+        });
+        return event.currentTarget.remove();
       }
     });
     PlanView = Backbone.View.extend({
       initialize: function() {},
       toggleDone: function() {},
       move: function() {}
-    });
-    InputView = Backbone.View.extend({
-      el: $('#input_container'),
-      template: _.template($('#inputter_template').html()),
-      events: {
-        "click .add_task": "new_task"
-      },
-      initialize: function() {
-        var now, nowTemp;
-        this.render();
-        nowTemp = new Date();
-        now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
-        $('#dawg').datepicker({
-          onRender: function(date) {
-            if (date.valueOf() < now.valueOf()) {
-              return "disabled";
-            } else {
-              return "";
-            }
-          }
-        });
-        this.task_name = this.$("#task_name");
-        this.task_date = this.$("#task_date");
-        return this.task_length = this.$("#task_length");
-      },
-      render: function() {
-        $(this.el).html(this.template({
-          today: json_data.today
-        }));
-        return this;
-      },
-      new_task: function() {
-        var data;
-        data = {
-          name: this.task_name.val(),
-          date: this.task_date.val(),
-          length: this.task_length.val()
-        };
-        this.model.trigger('new_task', data);
-        return $.post("/addtask", data, function(d, st, xr) {
-          return console.log("Done");
-        });
-      }
     });
     return App = new HomeView();
   });

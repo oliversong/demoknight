@@ -245,9 +245,9 @@ def home_data():
     right_now = time.mktime(monday.timetuple())
     two_weeks = right_now + 1209600
     one_week = right_now + 604800
+    # raise Exception('hi')
     # get unix timestamp for 2 weeks from now
     tasks = db.session.query(Task).filter(Task.user == g.user).filter(Task.due.between(right_now,two_weeks)).all()
-
     tasks_yo = {"First": deepcopy(week),"Second": deepcopy(week)}
     plans_yo = deepcopy(week)
 
@@ -259,9 +259,11 @@ def home_data():
         for task in tasks:
             if left <= task.due < right:
                 if i <= 6:
+                    print "task between ", left, " and ", right, "looks like ", aw_yeah[i], "index ",i
                     tasks_yo["First"][aw_yeah[i]].append(task.serialize)
                 else:
-                    tasks_yo["Second"][aw_yeah[i%6]].append(task.serialize)
+                    print "task between ", left, " and ", right, "looks like ", aw_yeah[i%7], "index ",i
+                    tasks_yo["Second"][aw_yeah[i%7]].append(task.serialize)
         i += 1
     # I have tasks, and each task has dates for planning. I need to go through every task within the 2 week period,
     # find every plan, and add that task to the appropriate day.
@@ -339,34 +341,85 @@ def parsetask():
 
         # Assume that inputs come in already parsed
         name = request.form['name']
-        day_string = request.form['date'].replace('-','/')  # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+        day_string = request.form['date'] # Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
         #time_string = request.form['due_time']  # HH:MM
-        time_string = '12AM'
+        time_string = "noon"
         estimate = request.form['length']
 
         dt = None
 
         cal = pdt.Calendar()
-        due, what = cal.parse(day_string+' at '+time_string)
+        okay = day_string.split()[1]+' at '+time_string
+        print okay  
+        due, what = cal.parse(okay)
         print due, what
+        unixstmp = None
         if what in (1, 2):
             # result is struct_time
             dt = datetime(*due[:6])
-        elif what == 3:
+            unixstmp = int(dt.strftime("%s"))
+            print "unixstmp",unixstmp
+        else:
             # result is datetime
-            dt = due
-
-        if dt is None:
-            return "Could not understand"
-
-        unixstmp = int(dt.strftime("%s"))
-
+            unixstmp = int(time.mktime(due))
+            print "unixstmp",unixstmp
+        if not unixstmp:
+            print "Could not understand"
+            abort(404)
         # make/add new Task
+        print "making new task"
         task = Task(name, unixstmp, estimate)
+        print task
         g.user.tasks.append(task)
         db.session.commit()
         return "Done"
 
+@app.route('/check', methods=['POST'])
+def check():
+    print "hello!"
+    if not g.user:
+        print "oops"
+        abort(404)
+    task_id = request.form['task_id']
+    task_id = task_id.split('_')[1]
+    print "task_id", task_id
+    task = db.session.query(Task).filter(Task.user == g.user).filter(Task.id == task_id).all()
+    if len(task) == 1 and task[0] in g.user.tasks.all():
+        print task[0]
+        task[0].completed = True
+        db.session.commit()
+        return "Done"
+    else:
+        print "other oops"
+        abort(404)
+
+@app.route('/uncheck', methods=['POST'])
+def uncheck():
+    if not g.user:
+        abort(404)
+    task_id = request.form['task_id']
+    task_id = task_id.split('_')[1]
+    task = db.session.query(Task).filter(Task.user == g.user).filter(Task.id == task_id).all()
+    if len(task) == 1 and task[0] in g.user.tasks.all():
+        task[0].completed = False
+        db.session.commit()
+        return "Done"
+    else:
+        abort(404)
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    if not g.user:
+        abort(404)
+    task_id = request.form['task_id']
+    task_id = task_id.split('_')[1]
+    task = db.session.query(Task).filter(Task.user == g.user).filter(Task.id == task_id).all()
+    if len(task) == 1 and task[0] in g.user.tasks.all():
+        db.session.delete(task[0])
+        db.session.commit()
+        return "Done"
+    else:
+        abort(404)
 
 @app.route('/about')
 def about():

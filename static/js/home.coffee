@@ -24,7 +24,6 @@ $ ->
     el: '#home',
     initialize: ()->
       this.model = new HomeModel()
-      this.input = new InputView({ model: this.model })
       this.thisWeek = new WeekView({ which: 'this', model: this.model })
       this.nextWeek = new WeekView({ which: 'next', model: this.model })
       this.planner = new PlannerView({ model:this.model })
@@ -67,7 +66,12 @@ $ ->
   )
 
   DayView = Backbone.View.extend(
-    template: _.template($('#day_template').html())
+    template: _.template($('#day_template').html()),
+    events: {
+      "click .herp"         : "show_inputter",
+      "click .input_cover"  : "swap_back",
+      "keypress .checker"      : "keypress_check"
+    },
     initialize: ->
       # i is which day
       this.i = this.options.which
@@ -83,14 +87,52 @@ $ ->
       this.tasks = []
       for task_detail in tasks_list
         this.tasks.push(new TaskView({ model:this.model, detail:task_detail }))
-
-    render: () ->
+    render: ->
       this.$el.addClass('weekday')
       this.$el.html(this.template({ day:json_data.two_weeks[this.i] }))
       for task in this.tasks
-        this.$el.append(task.render())
-      console.log(this)
+        $(this.$el.children()[0]).after(task.render())
       return this
+    show_inputter: ->
+      this_el = $(event.currentTarget)
+      herp = $(this_el.children()[this_el.children().length-3])
+      inputter = $(this_el.children()[this_el.children().length-2])
+      cover = $(this_el.children()[this_el.children().length-1])
+      herp.hide()
+      inputter.show()
+      cover.show()
+    keypress_check: (e)->
+      if (e.keyCode == 13)
+        this.swap_back()
+    swap_back: ->
+      this_el = $(event.currentTarget)
+      herp = $(this_el.children()[this_el.children().length-3])
+      inputter = $(this_el.children()[this_el.children().length-2])
+      cover = $(this_el.children()[this_el.children().length-1])
+      # make new task and add to list
+      task_name = inputter.children()[0].value
+      task_duration = inputter.children()[2].value
+      task_date = this_el.children()[0].innerHTML
+      if task_name == ''
+        herp.show()
+        inputter.hide()
+        cover.hide()
+      else
+        if task_duration == ''
+          task_duration = '1 hour'
+        # ajax post it to the server
+        data =
+          name: task_name
+          date: task_date
+          length: task_duration
+
+        $.post "/addtask", data, (d, st, xr) ->
+          console.log("Done")      
+
+        herp.show()
+        inputter.hide()
+        cover.hide()
+      
   )
 
   PlanDayView = Backbone.View.extend(
@@ -111,22 +153,78 @@ $ ->
   TaskView = Backbone.View.extend(
     template: _.template($("#task_template").html())
     events: {
-      "click .toggle"   : "task_checked"
+      "click .toggle"       : "task_checked"
+      "dblclick .task_name" : "edit_name"
+      "click .input_cover"  : "swap_back"
+      "keypress .edit"      : "check_key"
+      "click .delete_task"  : "delete"
+
     }
     initialize: ->
       this.details = this.options.detail
     render: ->
       this.$el.addClass('task')
-      this.$el.html(this.template({ done:this.details.completed, name:this.details.name }))
+      this.$el.attr('id','task_'+this.details.id)
+      if this.details.completed is true
+        completed = 'checked'
+      else
+        completed = ''
+      this.$el.html(this.template({ checked:completed, done:this.details.completed, name:this.details.name }))
       this.delegateEvents()
       return this.$el
     task_checked: ->
       checkbox = $($(event.currentTarget).children()[1])
-      console.log(checkbox.css('text-decoration'))
-      if checkbox.css('text-decoration') is 'none'
-        checkbox.css('text-decoration','line-through')
+      classList = checkbox.attr('class').split(/\s+/)
+      checked = false
+      $.each( classList, (index, item)->
+        if item is 'checked'
+          checked = true
+      )
+      id = event.currentTarget.id
+
+      if not checked
+        checkbox.addClass('checked')
+        # submit check
+        data =
+          task_id: id
+        $.post "/check", data, (d, st, xr) ->
+          console.log("Marked as complete")
       else
-        checkbox.css('text-decoration','none')
+        checkbox.removeClass('checked')
+        # submit uncheck
+        data =
+          task_id: id
+        $.post "/uncheck", data, (d, st, xr) ->
+          console.log("Marked as complete")
+    edit_name: ->
+      this_el = $(event.currentTarget)
+      task_name = $(this_el.children()[1])
+      edit_field = $(this_el.children()[2])
+      input_cover = $(this_el.children()[3])
+      if edit_field.css('dispay','none')
+        task_name.hide()  
+        edit_field.show()
+        input_cover.show()
+    check_key: (e)->
+      if (e.keyCode == 13)
+        swap_back()
+    swap_back: ->
+      this_el = $(event.currentTarget)
+      task_name = $(this_el.children()[1])
+      edit_field = $(this_el.children()[2])
+      input_cover = $(this_el.children()[3])
+      # submit edit
+      task_name.show()
+      edit_field.hide()
+      input_cover.hide()
+    delete: ->
+      id = event.currentTarget.id
+      data =
+        task_id: id
+      $.post "/delete", data, (d, st, xr) ->
+          console.log("Deleted")
+      event.currentTarget.remove()
+
   )
 
   PlanView = Backbone.View.extend(
@@ -137,43 +235,6 @@ $ ->
     toggleDone: ->
 
     move: ->
-  )
-  InputView = Backbone.View.extend(
-    el: $('#input_container')
-    template: _.template($('#inputter_template').html())
-    events: {
-      "click .add_task"   : "new_task"
-    }
-
-    initialize: ->
-      this.render()
-      nowTemp = new Date()
-      now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0)
-      $('#dawg').datepicker(onRender: (date) ->
-        (if date.valueOf() < now.valueOf() then "disabled" else "")
-      )
-
-      this.task_name = this.$("#task_name")
-      this.task_date = this.$("#task_date")
-      this.task_length = this.$("#task_length")
-
-    render: ->
-      $(this.el).html(this.template({ today:json_data.today }));
-
-      return this
-
-    new_task: ->
-      # ajax post it to the server
-      data =
-        name: @task_name.val()
-        date: @task_date.val()
-        length: @task_length.val()
-
-      # trigger event "task_create name date length"
-      this.model.trigger('new_task',data)
-
-      $.post "/addtask", data, (d, st, xr) ->
-        console.log("Done")
   )
 
   # make the App
