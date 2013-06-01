@@ -1,4 +1,6 @@
 * refactor my backbone code to make it MODULAR??
+* Asynchronous task syncing / offline mode
+* Alert for "hm you seem to not be disconnected"
 * Drag and drop for plans
 * Delete plan
 * When you edit you should be able to edit the duration too
