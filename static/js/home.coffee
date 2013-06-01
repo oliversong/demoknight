@@ -76,6 +76,7 @@ $ ->
       # i is which day
       this.i = this.options.which
       this.weekday = weekdays[this.i%7]
+      this.total_time = 0
       # render template
       if this.i < 7
         f_or_s = "First"
@@ -86,12 +87,16 @@ $ ->
       # for all tasks in this day, make a TaskView
       this.tasks = []
       for task_detail in tasks_list
+        task_detail.day = this
         this.tasks.push(new TaskView({ model:this.model, detail:task_detail }))
     render: ->
       this.$el.addClass('weekday')
       this.$el.html(this.template({ day:json_data.two_weeks[this.i] }))
+      console.log this.weekday
       for task in this.tasks
+        this.total_time += parseInt(task.details.estimate)
         $(this.$el.children()[0]).after(task.render())
+      this.update_heat()
       return this
     show_inputter: ->
       this_el = $(event.currentTarget)
@@ -100,6 +105,7 @@ $ ->
       cover = $(this_el.children()[this_el.children().length-1])
       herp.hide()
       inputter.show()
+      inputter.children()[0].focus()
       cover.show()
     keypress_check: (e)->
       if (e.keyCode == 13)
@@ -130,8 +136,14 @@ $ ->
           completed: false
           id: -1
           name: task_name
-        new_task = new TaskView({ model:this.model, detail:task_detail })
+          day: this
+        new_task = new TaskView({ model:this.model, detail:task_detail})
         this.tasks.push(new_task)
+        if new_task.details.estimate == undefined
+          this.total_time += 3600
+        else
+          this.total_time += parseInt(new_task.details.estimate)
+        this.update_heat()
         herp.before(new_task.render())
 
         $.post "/addtask", data, (d, st, xr) ->
@@ -144,7 +156,13 @@ $ ->
         $(inputter.children()[0]).val('')
         $(inputter.children()[2]).val('')
         cover.hide()
-      
+    update_heat: ->
+      color = switch
+        when this.total_time is 0 then '#FFF'
+        when this.total_time < 3601 then '#d6f5d8'
+        when this.total_time < 10801 then '#f8f4ba'
+        else '#f7aeae'
+      this.$el.css('background-color',color)
   )
 
   PlanDayView = Backbone.View.extend(
@@ -251,8 +269,12 @@ $ ->
         task_id: id
       $.post "/delete", data, (d, st, xr) ->
           console.log("Deleted")
+      if this.details.estimate == undefined
+        this.details.day.total_time -= 3600
+      else
+        this.details.day.total_time -= parseInt(this.details.estimate)
+      this.details.day.update_heat()
       event.currentTarget.remove()
-
   )
 
   PlanView = Backbone.View.extend(

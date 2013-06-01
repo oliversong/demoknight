@@ -346,11 +346,18 @@ def parsetask():
         time_string = "noon"
         estimate = request.form['length']
 
-        dt = None
-
         cal = pdt.Calendar()
+        # estimated number of seconds
+        n = datetime.now()
+        current_unix = time.mktime(n.timetuple())
+        est, what2 = cal.parse(estimate)
+        intermediate = datetime(*est[:6])
+        est_unix = int(intermediate.strftime("%s"))
+        required = int(est_unix - current_unix)
+        # due day
+        dt = None
         okay = day_string.split()[1]+' at '+time_string
-        print okay  
+        print okay
         due, what = cal.parse(okay)
         print due, what
         unixstmp = None
@@ -366,10 +373,13 @@ def parsetask():
         if not unixstmp:
             print "Could not understand"
             abort(404)
+        # is this year or next year closer?
+        next_year = abs(int(unixstmp) - int(current_unix))
+        this_year = abs(int(unixstmp) - 31557600 - int(current_unix))
+        if this_year < next_year:
+            unixstmp = int(unixstmp) - 31557600
         # make/add new Task
-        print "making new task"
-        task = Task(name, unixstmp, estimate)
-        print task
+        task = Task(name, unixstmp, required)
         g.user.tasks.append(task)
         db.session.commit()
         return str(task.id)

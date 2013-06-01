@@ -99,6 +99,7 @@
         var f_or_s, task_detail, tasks_list, _i, _len, _results;
         this.i = this.options.which;
         this.weekday = weekdays[this.i % 7];
+        this.total_time = 0;
         if (this.i < 7) {
           f_or_s = "First";
         } else {
@@ -109,6 +110,7 @@
         _results = [];
         for (_i = 0, _len = tasks_list.length; _i < _len; _i++) {
           task_detail = tasks_list[_i];
+          task_detail.day = this;
           _results.push(this.tasks.push(new TaskView({
             model: this.model,
             detail: task_detail
@@ -122,11 +124,14 @@
         this.$el.html(this.template({
           day: json_data.two_weeks[this.i]
         }));
+        console.log(this.weekday);
         _ref = this.tasks;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           task = _ref[_i];
+          this.total_time += parseInt(task.details.estimate);
           $(this.$el.children()[0]).after(task.render());
         }
+        this.update_heat();
         return this;
       },
       show_inputter: function() {
@@ -137,6 +142,7 @@
         cover = $(this_el.children()[this_el.children().length - 1]);
         herp.hide();
         inputter.show();
+        inputter.children()[0].focus();
         return cover.show();
       },
       keypress_check: function(e) {
@@ -169,13 +175,20 @@
           task_detail = {
             completed: false,
             id: -1,
-            name: task_name
+            name: task_name,
+            day: this
           };
           new_task = new TaskView({
             model: this.model,
             detail: task_detail
           });
           this.tasks.push(new_task);
+          if (new_task.details.estimate === void 0) {
+            this.total_time += 3600;
+          } else {
+            this.total_time += parseInt(new_task.details.estimate);
+          }
+          this.update_heat();
           herp.before(new_task.render());
           $.post("/addtask", data, function(d, st, xr) {
             this_el.children()[this_el.children().length - 4].setAttribute('id', 'task_' + d);
@@ -187,6 +200,22 @@
           $(inputter.children()[2]).val('');
           return cover.hide();
         }
+      },
+      update_heat: function() {
+        var color;
+        color = (function() {
+          switch (false) {
+            case this.total_time !== 0:
+              return '#FFF';
+            case !(this.total_time < 3601):
+              return '#d6f5d8';
+            case !(this.total_time < 10801):
+              return '#f8f4ba';
+            default:
+              return '#f7aeae';
+          }
+        }).call(this);
+        return this.$el.css('background-color', color);
       }
     });
     PlanDayView = Backbone.View.extend({
@@ -325,6 +354,12 @@
         $.post("/delete", data, function(d, st, xr) {
           return console.log("Deleted");
         });
+        if (this.details.estimate === void 0) {
+          this.details.day.total_time -= 3600;
+        } else {
+          this.details.day.total_time -= parseInt(this.details.estimate);
+        }
+        this.details.day.update_heat();
         return event.currentTarget.remove();
       }
     });
