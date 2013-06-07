@@ -267,7 +267,8 @@
         this.$el.html(this.template({
           checked: completed,
           done: this.details.completed,
-          name: this.details.name
+          name: this.details.name,
+          duration: this.details.estimate
         }));
         this.delegateEvents();
         return this.$el;
@@ -320,11 +321,13 @@
         }
       },
       swap_back: function() {
-        var data, edit_field, ho, id, input_cover, task_name, this_el;
+        var data, edit_fields, ho, id, input_cover, new_estimate, new_name, task_name, this_el;
         this_el = $(event.currentTarget);
         ho = this_el.children();
         task_name = $(ho[1]);
-        edit_field = $(ho[2]);
+        edit_fields = $(ho[2]);
+        new_name = edit_field.children()[0];
+        new_estimate = edit_field.children()[2];
         input_cover = $(ho[3]);
         if (edit_field.val() === ho[1].innerHTML) {
           task_name.show();

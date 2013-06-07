@@ -5,6 +5,7 @@
 * Delete plan
 * When you edit you should be able to edit the duration too
 * Tasks fetched from db seem to be sorted in reverse order
+* Should be able to drag and drop reorder tasks
 
 Done
 * parses to next year when day has already passed
