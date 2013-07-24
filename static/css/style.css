@@ -46,11 +46,6 @@ a {
   margin-left: -1px;
   padding-left: 20px;
 }
-.edit {
-  display: none;
-  position: relative;
-  z-index: 3;
-}
 .task span {
   text-decoration: none;
 }
@@ -69,7 +64,7 @@ a {
 .task_name {
   width: 90%;
 }
-.estimate {
+.estimate_edit {
   -webkit-border-radius: 0px 4px 4px 0px !important;
   -moz-border-radius: 0px 4px 4px 0px !important;
   border-radius: 0px 4px 4px 0px !important;

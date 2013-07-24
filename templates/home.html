@@ -44,9 +44,9 @@
     <input class="toggle pull-left" type="checkbox" <%= checked %>>
     <div class="task_name pull-left <%= done ? ' checked' : '' %>"><%= name %></div>
     <div class="input-append task_inputter">
-        <input class="span2" type="text" value="<%= name %>" placeholder="Task name">
+        <input class="span2 name_edit" type="text" value="<%= name %>" placeholder="Task name">
         <span class="add-on"> ~ </span>
-        <input class="span1 estimate" placeholder="1 hour" type="text" value="<%= duration %>">
+        <input class="span1 estimate_edit" placeholder="1 hour" type="text" value="<%= duration %>">
     </div>
     <div class='input_cover'></div>
     <i class="pull-right icon-remove-sign delete_task"></i>

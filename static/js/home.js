@@ -249,7 +249,8 @@
         "click .toggle": "task_checked",
         "dblclick .task_name": "edit_name",
         "click .input_cover": "swap_back",
-        "keypress .edit": "check_key",
+        "keypress .name_edit": "check_key",
+        "keypress .estimate_edit": "check_key",
         "click .delete_task": "delete"
       },
       initialize: function() {
@@ -326,25 +327,26 @@
         ho = this_el.children();
         task_name = $(ho[1]);
         edit_fields = $(ho[2]);
-        new_name = edit_field.children()[0];
-        new_estimate = edit_field.children()[2];
+        new_name = edit_fields.children()[0];
+        new_estimate = edit_fields.children()[2];
         input_cover = $(ho[3]);
-        if (edit_field.val() === ho[1].innerHTML) {
+        if (new_name.val() === ho[1].innerHTML) {
           task_name.show();
-          edit_field.hide();
+          edit_fields.hide();
           return input_cover.hide();
         } else {
           id = event.currentTarget.id;
           data = {
             task_id: id,
-            new_name: edit_field.val()
+            new_name: new_name.val(),
+            new_estimate: new_estimate.val()
           };
           $.post("/update", data, function(d, st, xr) {
             return console.log("Task updated");
           });
-          task_name.text(edit_field.val());
+          task_name.text(new_name.val());
           task_name.show();
-          edit_field.hide();
+          edit_fields.hide();
           return input_cover.hide();
         }
       },
