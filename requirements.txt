@@ -4,5 +4,7 @@ Jinja2==2.6
 SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
 gevent==0.13.8
+greenlet==0.4.1
 httplib2==0.7.7
+-e git+https://github.com/bear/parsedatetime.git@7c5e6a08a2a8dc01c117d952cca66700271b60ed#egg=parsedatetime-dev
 wsgiref==0.1.2
